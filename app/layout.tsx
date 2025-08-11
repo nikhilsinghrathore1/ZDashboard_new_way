@@ -32,7 +32,7 @@ export default function RootLayout({
         <div className="w-full h-screen overflow-hidden bg-[#020817] flex">
           <SideNavbar />
 
-          <div className="w-[83.35%] h-full overflow-y-auto ">
+          <div className="w-[83.35%] h-full relative overflow-y-auto ">
             <TopNavbar />
                     
             {children}

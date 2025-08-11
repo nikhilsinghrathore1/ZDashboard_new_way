@@ -40,7 +40,7 @@ const TopNavbar = () => {
     setShowUserMenu(false);
   };
 
-  const handleSearch = (e) => {
+  const handleSearch = (e:any) => {
     if (e.key === 'Enter' && searchQuery.trim()) {
       console.log("Searching for:", searchQuery);
     }
@@ -48,7 +48,7 @@ const TopNavbar = () => {
 
   return (
     <header 
-      className={`w-full h-[9%] border-b border-green-500/30 px-6 flex items-center justify-between sticky top-0 z-50 transition-all duration-500 relative overflow-hidden ${
+      className={`w-full h-[9%] border-b border-green-500/30 px-6 flex items-center justify-between sticky top-0 z-50 transition-all duration-500   ${
         isNavHovered 
           ? 'bg-gradient-to-r from-green-800/90 via-green-700/85 to-emerald-800/90 backdrop-blur-lg shadow-lg shadow-green-400/30' 
           : 'bg-black/60 backdrop-blur-sm'
@@ -108,7 +108,7 @@ const TopNavbar = () => {
 
           {/* Notifications Dropdown */}
           {showNotifications && (
-            <div className="absolute right-0 top-12 w-80 bg-gray-900/95 border border-gray-700 rounded-lg shadow-xl z-50 backdrop-blur-md">
+            <div className="absolute z-[100] right-0 top-12 w-80 bg-gray-900/95 border border-gray-700 rounded-lg shadow-xl  backdrop-blur-md">
               <div className="p-4 border-b border-gray-700">
                 <h3 className="font-semibold text-white">Notifications</h3>
               </div>
