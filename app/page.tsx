@@ -9,6 +9,7 @@ import {
   FileText,
   ImageIcon,
   Music,
+  ShoppingBag,
   Sparkles,
   TrendingUp,
   Users,
@@ -21,6 +22,7 @@ import img2 from "../public/finAgent.jpg"
 import Image from "next/image";
 import AiAgentsCard from "./components/AiAgentsCard";
 import BadgeCard from "./components/Badge";
+import MainFooter from "./components/MainFooter";
 
 const cardData = [
   { Icon: FileText, title: "Language Model", description: "234 Agents" },
@@ -142,6 +144,8 @@ export default function Home() {
 
       </div>
 
+      {/* Start creating your Ai Agent section  */}
+      <MainFooter/>
 
     </div>
   );
