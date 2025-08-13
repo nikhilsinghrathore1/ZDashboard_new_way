@@ -1,193 +1,193 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import img from "../../public/coinhehe-removebg-preview.png";
-import Image from "next/image";
-import {
-  Home,
-  Zap,
-  Settings,
-  ShoppingBag,
-  Vote,
-  Wallet,
-  TrendingUp,
-  Users,
-  FileText,
-  Play,
-  Pause,
-  RotateCcw,
-  Music,
-  Square,
-} from "lucide-react";
+// import React, { useState, useEffect } from "react";
+// import img from "../../public/coinhehe-removebg-preview.png";
+// import Image from "next/image";
+// import {
+//   Home,
+//   Zap,
+//   Settings,
+//   ShoppingBag,
+//   Vote,
+//   Wallet,
+//   TrendingUp,
+//   Users,
+//   FileText,
+//   Play,
+//   Pause,
+//   RotateCcw,
+//   Music,
+//   Square,
+// } from "lucide-react";
 
-interface NavItemProps {
-  icon: React.ComponentType<{ className?: string; size?: number }>;
-  title: string;
-  subtitle: string;
-  isActive?: boolean;
-}
+// interface NavItemProps {
+//   icon: React.ComponentType<{ className?: string; size?: number }>;
+//   title: string;
+//   subtitle: string;
+//   isActive?: boolean;
+// }
 
-const NavItem: React.FC<NavItemProps> = ({ icon: Icon, title, subtitle, isActive = false }) => (
-  <div
-    className={`
-    relative w-full h-[60px] border-[1px] flex gap-4 items-center justify-start px-4 rounded-md 
-    cursor-pointer transition-all duration-300 group overflow-hidden
-    ${
-      isActive
-        ? "border-[#00FF88] bg-gradient-to-r from-[#00FF88]/10 to-transparent shadow-[0_0_20px_rgba(0,255,136,0.3)]"
-        : "border-[#05352C] hover:border-[#00FF88] hover:bg-gradient-to-r hover:from-[#00FF88]/5 hover:to-transparent"
-    }
-  `}
-  >
-    {/* Scan lines effect */}
-    <div className="absolute inset-0 opacity-20 pointer-events-none">
-      <div
-        className="absolute inset-0 bg-gradient-to-b from-transparent via-[#00FF88]/10 to-transparent animate-pulse"
-        style={{
-          backgroundImage:
-            "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,136,0.1) 2px, rgba(0,255,136,0.1) 4px)",
-        }}
-      ></div>
-    </div>
+// const NavItem: React.FC<NavItemProps> = ({ icon: Icon, title, subtitle, isActive = false }) => (
+//   <div
+//     className={`
+//     relative w-full h-[60px] border-[1px] flex gap-4 items-center justify-start px-4 rounded-md 
+//     cursor-pointer transition-all duration-300 group overflow-hidden
+//     ${
+//       isActive
+//         ? "border-[#00FF88] bg-gradient-to-r from-[#00FF88]/10 to-transparent shadow-[0_0_20px_rgba(0,255,136,0.3)]"
+//         : "border-[#05352C] hover:border-[#00FF88] hover:bg-gradient-to-r hover:from-[#00FF88]/5 hover:to-transparent"
+//     }
+//   `}
+//   >
+//     {/* Scan lines effect */}
+//     <div className="absolute inset-0 opacity-20 pointer-events-none">
+//       <div
+//         className="absolute inset-0 bg-gradient-to-b from-transparent via-[#00FF88]/10 to-transparent animate-pulse"
+//         style={{
+//           backgroundImage:
+//             "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,136,0.1) 2px, rgba(0,255,136,0.1) 4px)",
+//         }}
+//       ></div>
+//     </div>
 
-    {/* Glitch effect on hover */}
-    <div className="absolute inset-0 opacity-0 group-hover:opacity-30 transition-opacity duration-200 pointer-events-none">
-      <div className="absolute inset-0 bg-gradient-to-r from-[#FF0080]/20 to-[#00FF88]/20 animate-pulse"></div>
-    </div>
+//     {/* Glitch effect on hover */}
+//     <div className="absolute inset-0 opacity-0 group-hover:opacity-30 transition-opacity duration-200 pointer-events-none">
+//       <div className="absolute inset-0 bg-gradient-to-r from-[#FF0080]/20 to-[#00FF88]/20 animate-pulse"></div>
+//     </div>
 
-    <Icon
-      className={`${
-        isActive ? "text-[#00FF88]" : "text-[#fff]/70"
-      } group-hover:text-[#00FF88] transition-colors duration-300 relative z-10`}
-      size={20}
-    />
-    <div className="leading-none relative z-10">
-      <h1
-        className={`text-md tracking-wide font-medium transition-colors duration-300 ${
-          isActive ? "text-[#00FF88]" : "text-white group-hover:text-[#00FF88]"
-        }`}
-      >
-        {title}
-      </h1>
-      <p className="text-xs text-white/50 group-hover:text-white/70 transition-colors duration-300">
-        {subtitle}
-      </p>
-    </div>
+//     <Icon
+//       className={`${
+//         isActive ? "text-[#00FF88]" : "text-[#fff]/70"
+//       } group-hover:text-[#00FF88] transition-colors duration-300 relative z-10`}
+//       size={20}
+//     />
+//     <div className="leading-none relative z-10">
+//       <h1
+//         className={`text-md tracking-wide font-medium transition-colors duration-300 ${
+//           isActive ? "text-[#00FF88]" : "text-white group-hover:text-[#00FF88]"
+//         }`}
+//       >
+//         {title}
+//       </h1>
+//       <p className="text-xs text-white/50 group-hover:text-white/70 transition-colors duration-300">
+//         {subtitle}
+//       </p>
+//     </div>
 
-    {/* Corner accent */}
-    <div
-      className={`absolute top-0 right-0 w-0 h-0 border-l-[8px] border-b-[8px] border-l-transparent transition-all duration-300 ${
-        isActive
-          ? "border-b-[#00FF88]"
-          : "border-b-transparent group-hover:border-b-[#00FF88]"
-      }`}
-    ></div>
-  </div>
-);
+//     {/* Corner accent */}
+//     <div
+//       className={`absolute top-0 right-0 w-0 h-0 border-l-[8px] border-b-[8px] border-l-transparent transition-all duration-300 ${
+//         isActive
+//           ? "border-b-[#00FF88]"
+//           : "border-b-transparent group-hover:border-b-[#00FF88]"
+//       }`}
+//     ></div>
+//   </div>
+// );
 
-const CyberpunkClock: React.FC = () => {
-  const [time, setTime] = useState<Date>(new Date());
-  const [glitchText, setGlitchText] = useState<string>('');
+// const CyberpunkClock: React.FC = () => {
+//   const [time, setTime] = useState<Date>(new Date());
+//   const [glitchText, setGlitchText] = useState<string>('');
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTime(new Date());
+//   useEffect(() => {
+//     const interval = setInterval(() => {
+//       setTime(new Date());
       
-      // Occasional glitch effect on seconds
-      if (Math.random() < 0.1) { // 10% chance per second
-        const glitchChars = ['█', '▓', '▒', '░', '◆', '◇', '▀', '▄'];
-        setGlitchText(glitchChars[Math.floor(Math.random() * glitchChars.length)]);
-        setTimeout(() => setGlitchText(''), 100);
-      }
-    }, 1000);
+//       // Occasional glitch effect on seconds
+//       if (Math.random() < 0.1) { // 10% chance per second
+//         const glitchChars = ['█', '▓', '▒', '░', '◆', '◇', '▀', '▄'];
+//         setGlitchText(glitchChars[Math.floor(Math.random() * glitchChars.length)]);
+//         setTimeout(() => setGlitchText(''), 100);
+//       }
+//     }, 1000);
 
-    return () => clearInterval(interval);
-  }, []);
+//     return () => clearInterval(interval);
+//   }, []);
 
-  const formatTime = (date: Date): { hours: string; minutes: string; seconds: string } => {
-    return {
-      hours: date.getHours().toString().padStart(2, '0'),
-      minutes: date.getMinutes().toString().padStart(2, '0'),
-      seconds: date.getSeconds().toString().padStart(2, '0')
-    };
-  };
+//   const formatTime = (date: Date): { hours: string; minutes: string; seconds: string } => {
+//     return {
+//       hours: date.getHours().toString().padStart(2, '0'),
+//       minutes: date.getMinutes().toString().padStart(2, '0'),
+//       seconds: date.getSeconds().toString().padStart(2, '0')
+//     };
+//   };
 
-  const { hours, minutes, seconds } = formatTime(time);
+//   const { hours, minutes, seconds } = formatTime(time);
 
-  return (
-    <div className="w-full border-[1px] border-[#00FF88]/30 rounded-md p-3 mb-3 bg-gradient-to-br from-[#00FF88]/5 to-transparent relative overflow-hidden">
-      {/* Scanning line effect */}
-      <div className="absolute inset-0 opacity-30 pointer-events-none">
-        <div
-          className="absolute inset-0 bg-gradient-to-r from-transparent via-[#00FF88]/20 to-transparent"
-          style={{
-            animation: 'clockScan 3s linear infinite',
-            background: 'linear-gradient(90deg, transparent, rgba(0,255,136,0.3), transparent)'
-          }}
-        />
-      </div>
+//   return (
+//     <div className="w-full border-[1px] border-[#00FF88]/30 rounded-md p-3 mb-3 bg-gradient-to-br from-[#00FF88]/5 to-transparent relative overflow-hidden">
+//       {/* Scanning line effect */}
+//       <div className="absolute inset-0 opacity-30 pointer-events-none">
+//         <div
+//           className="absolute inset-0 bg-gradient-to-r from-transparent via-[#00FF88]/20 to-transparent"
+//           style={{
+//             animation: 'clockScan 3s linear infinite',
+//             background: 'linear-gradient(90deg, transparent, rgba(0,255,136,0.3), transparent)'
+//           }}
+//         />
+//       </div>
 
-      <div className="flex justify-between items-center mb-2 relative z-10">
-        <h3 className="text-[#00FF88] text-xs font-bold tracking-wide flex items-center gap-1">
-          <div className="w-2 h-2 border border-[#00FF88] rounded-full animate-pulse" />
-          SYSTEM TIME
-        </h3>
-        <span className="text-[#FF0080] text-xs font-mono">
-          {time.toLocaleDateString('en-US', { 
-            month: 'short', 
-            day: '2-digit',
-            year: '2-digit'
-          }).toUpperCase()}
-        </span>
-      </div>
+//       <div className="flex justify-between items-center mb-2 relative z-10">
+//         <h3 className="text-[#00FF88] text-xs font-bold tracking-wide flex items-center gap-1">
+//           <div className="w-2 h-2 border border-[#00FF88] rounded-full animate-pulse" />
+//           SYSTEM TIME
+//         </h3>
+//         <span className="text-[#FF0080] text-xs font-mono">
+//           {time.toLocaleDateString('en-US', { 
+//             month: 'short', 
+//             day: '2-digit',
+//             year: '2-digit'
+//           }).toUpperCase()}
+//         </span>
+//       </div>
 
-      {/* Digital Clock Display */}
-      <div className="relative z-10 flex items-center justify-center">
-        <div className="font-mono text-2xl font-bold tracking-wider flex items-center gap-1">
-          {/* Hours */}
-          <span className="text-[#00FF88] drop-shadow-[0_0_10px_rgba(0,255,136,0.8)]">
-            {hours}
-          </span>
+//       {/* Digital Clock Display */}
+//       <div className="relative z-10 flex items-center justify-center">
+//         <div className="font-mono text-2xl font-bold tracking-wider flex items-center gap-1">
+//           {/* Hours */}
+//           <span className="text-[#00FF88] drop-shadow-[0_0_10px_rgba(0,255,136,0.8)]">
+//             {hours}
+//           </span>
           
-          {/* Blinking separator */}
-          <span className="text-[#00BFFF] animate-pulse text-xl">:</span>
+//           {/* Blinking separator */}
+//           <span className="text-[#00BFFF] animate-pulse text-xl">:</span>
           
-          {/* Minutes */}
-          <span className="text-[#00BFFF] drop-shadow-[0_0_10px_rgba(0,191,255,0.8)]">
-            {minutes}
-          </span>
+//           {/* Minutes */}
+//           <span className="text-[#00BFFF] drop-shadow-[0_0_10px_rgba(0,191,255,0.8)]">
+//             {minutes}
+//           </span>
           
-          {/* Blinking separator */}
-          <span className="text-[#FF0080] animate-pulse text-xl">:</span>
+//           {/* Blinking separator */}
+//           <span className="text-[#FF0080] animate-pulse text-xl">:</span>
           
-          {/* Seconds with glitch effect */}
-          <span className="text-[#FF0080] drop-shadow-[0_0_10px_rgba(255,0,128,0.8)] relative">
-            {glitchText || seconds}
-          </span>
-        </div>
-      </div>
+//           {/* Seconds with glitch effect */}
+//           <span className="text-[#FF0080] drop-shadow-[0_0_10px_rgba(255,0,128,0.8)] relative">
+//             {glitchText || seconds}
+//           </span>
+//         </div>
+//       </div>
 
-      {/* Circuit-like decoration */}
-      <div className="absolute top-1 right-1 w-4 h-4 opacity-50">
-        <div className="w-full h-0.5 bg-[#00FF88] animate-pulse" />
-        <div className="w-0.5 h-full bg-[#00FF88] animate-pulse absolute top-0 right-0" />
-        <div className="w-1 h-1 bg-[#00FF88] rounded-full absolute top-0 right-0 animate-pulse" />
-      </div>
+//       {/* Circuit-like decoration */}
+//       <div className="absolute top-1 right-1 w-4 h-4 opacity-50">
+//         <div className="w-full h-0.5 bg-[#00FF88] animate-pulse" />
+//         <div className="w-0.5 h-full bg-[#00FF88] animate-pulse absolute top-0 right-0" />
+//         <div className="w-1 h-1 bg-[#00FF88] rounded-full absolute top-0 right-0 animate-pulse" />
+//       </div>
 
-      <div className="absolute bottom-1 left-1 w-4 h-4 opacity-50">
-        <div className="w-full h-0.5 bg-[#FF0080] animate-pulse" />
-        <div className="w-0.5 h-full bg-[#FF0080] animate-pulse" />
-        <div className="w-1 h-1 bg-[#FF0080] rounded-full animate-pulse" />
-      </div>
+//       <div className="absolute bottom-1 left-1 w-4 h-4 opacity-50">
+//         <div className="w-full h-0.5 bg-[#FF0080] animate-pulse" />
+//         <div className="w-0.5 h-full bg-[#FF0080] animate-pulse" />
+//         <div className="w-1 h-1 bg-[#FF0080] rounded-full animate-pulse" />
+//       </div>
 
-      <style jsx>{`
-        @keyframes clockScan {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-      `}</style>
-    </div>
-  );
-};
+//       <style jsx>{`
+//         @keyframes clockScan {
+//           0% { transform: translateX(-100%); }
+//           100% { transform: translateX(100%); }
+//         }
+//       `}</style>
+//     </div>
+//   );
+// };
 
 const MusicVisualizer: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -410,6 +410,322 @@ const MusicVisualizer: React.FC = () => {
   );
 };
 
+// const SideNavbar: React.FC = () => {
+//   return (
+//     <div className="w-[16.65%] py-3 h-full border-r-[3px] border-[#085948] relative overflow-hidden">
+//       <style jsx>{`
+//         @keyframes scan {
+//           0% {
+//             transform: translateY(-100vh);
+//           }
+//           100% {
+//             transform: translateY(100vh);
+//           }
+//         }
+//         @keyframes glitch {
+//           0% {
+//             transform: translateX(0);
+//           }
+//           20% {
+//             transform: translateX(-2px);
+//           }
+//           40% {
+//             transform: translateX(2px);
+//           }
+//           60% {
+//             transform: translateX(-1px);
+//           }
+//           80% {
+//             transform: translateX(1px);
+//           }
+//           100% {
+//             transform: translateX(0);
+//           }
+//         }
+//       `}</style>
+
+//       <div className="w-full h-[11.8%] bg-gradient-to-r from-[#000103] to-[#001a0f] border-b-[0.5px] px-5 border-[#00FF88]/30 flex items-center justify-center gap-3 relative">
+//         {/* Glowing border effect */}
+//         <div className="absolute inset-0 border-b-[1px] border-[#00FF88]/50 shadow-[0_1px_10px_rgba(0,255,136,0.3)]"></div>
+
+//         <div className="w-[50px] h-[50px] rounded-full relative overflow-hidden border-2 border-[#00FF88]/30">
+//           <Image
+//             className="w-full h-full object-cover"
+//             src={img}
+//             alt="not showing"
+//           />
+//           <div className="absolute inset-0 bg-gradient-to-br from-[#00FF88]/20 to-transparent"></div>
+//         </div>
+
+//         <div className="relative z-10">
+//           <h1 className="text-[#00FF88] uppercase font-bold text-lg tracking-wider drop-shadow-[0_0_10px_rgba(0,255,136,0.5)]">
+//             ZLag
+//           </h1>
+//           <p className="text-[#94A3B8] text-xs leading-none opacity-70 font-semibold tracking-wide">
+//             Decentralised AI studio
+//           </p>
+//         </div>
+//       </div>
+
+//       <div className="w-full flex flex-col px-5 py-5 items-center justify-between h-[88.2%] bg-gradient-to-b from-[#01060A] to-[#000a03] relative overflow-hidden">
+//         {/* Animated background scan lines for bottom section only */}
+//         <div className="absolute inset-0 opacity-15 pointer-events-none">
+//           <div
+//             className="absolute inset-0 bg-gradient-to-r from-transparent via-[#00FF88]/20 to-transparent"
+//             style={{
+//               backgroundImage:
+//                 "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,136,0.1) 2px, rgba(0,255,136,0.1) 4px)",
+//               animation: "scan 4s linear infinite",
+//             }}
+//           ></div>
+//         </div>
+
+//         <div className="flex w-full flex-col gap-3 relative z-10">
+//           <NavItem
+//             icon={Home}
+//             title="Home"
+//             subtitle="Command Center"
+//             isActive={true}
+//           />
+//           <NavItem
+//             icon={Zap}
+//             title="Create AI Agent"
+//             subtitle="Deploy Intelligence"
+//           />
+//           <NavItem
+//             icon={ShoppingBag}
+//             title="Marketplace"
+//             subtitle="Trade Assets"
+//           />
+//           <NavItem icon={Wallet} title="Wallet" subtitle="Crypto Vault" />
+//         </div>
+
+//         {/* Cyberpunk Clock and Music Visualizer at the bottom */}
+//         <div className="relative z-10 w-full">
+//           <CyberpunkClock />
+//           <MusicVisualizer />
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default SideNavbar;
+
+
+
+
+import React, { useState, useEffect } from "react";
+import img from "../../public/coinhehe-removebg-preview.png";
+import Image from "next/image";
+import {
+  Home,
+  Zap,
+  Settings,
+  ShoppingBag,
+  Vote,
+  Wallet,
+  TrendingUp,
+  Users,
+  FileText,
+  Play,
+  Pause,
+  RotateCcw,
+  Music,
+  Square,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+
+interface NavItemProps {
+  icon: React.ComponentType<{ className?: string; size?: number }>;
+  title: string;
+  subtitle: string;
+  isActive?: boolean;
+  path?: string;
+}
+
+const NavItem: React.FC<NavItemProps> = ({
+  icon: Icon,
+  title,
+  subtitle,
+  isActive = false,
+  path,
+}) => {
+  const router = useRouter();
+
+  const handleClick = () => {
+    if (path) {
+      router.push(path);
+    }
+  };
+
+  return (
+    <div
+      onClick={handleClick}
+      className={`
+    relative w-full h-[60px] border-[1px] flex gap-4 items-center justify-start px-4 rounded-md 
+    cursor-pointer transition-all duration-300 group overflow-hidden
+    ${
+      isActive
+        ? "border-[#00FF88] bg-gradient-to-r from-[#00FF88]/10 to-transparent shadow-[0_0_20px_rgba(0,255,136,0.3)]"
+        : "border-[#05352C] hover:border-[#00FF88] hover:bg-gradient-to-r hover:from-[#00FF88]/5 hover:to-transparent"
+    }
+  `}
+    >
+      {/* Scan lines effect */}
+      <div className="absolute inset-0 opacity-20 pointer-events-none">
+        <div
+          className="absolute inset-0 bg-gradient-to-b from-transparent via-[#00FF88]/10 to-transparent animate-pulse"
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,136,0.1) 2px, rgba(0,255,136,0.1) 4px)",
+          }}
+        ></div>
+      </div>
+
+      {/* Glitch effect on hover */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-30 transition-opacity duration-200 pointer-events-none">
+        <div className="absolute inset-0 bg-gradient-to-r from-[#FF0080]/20 to-[#00FF88]/20 animate-pulse"></div>
+      </div>
+
+      <Icon
+        className={`${
+          isActive ? "text-[#00FF88]" : "text-[#fff]/70"
+        } group-hover:text-[#00FF88] transition-colors duration-300 relative z-10`}
+        size={20}
+      />
+      <div className="leading-none relative z-10">
+        <h1
+          className={`text-md tracking-wide font-medium transition-colors duration-300 ${
+            isActive ? "text-[#00FF88]" : "text-white group-hover:text-[#00FF88]"
+          }`}
+        >
+          {title}
+        </h1>
+        <p className="text-xs text-white/50 group-hover:text-white/70 transition-colors duration-300">
+          {subtitle}
+        </p>
+      </div>
+
+      {/* Corner accent */}
+      <div
+        className={`absolute top-0 right-0 w-0 h-0 border-l-[8px] border-b-[8px] border-l-transparent transition-all duration-300 ${
+          isActive
+            ? "border-b-[#00FF88]"
+            : "border-b-transparent group-hover:border-b-[#00FF88]"
+        }`}
+      ></div>
+    </div>
+  );
+};
+
+const CyberpunkClock: React.FC = () => {
+  const [time, setTime] = useState<Date>(new Date());
+  const [glitchText, setGlitchText] = useState<string>("");
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTime(new Date());
+
+      // Occasional glitch effect on seconds
+      if (Math.random() < 0.1) {
+        const glitchChars = ["█", "▓", "▒", "░", "◆", "◇", "▀", "▄"];
+        setGlitchText(
+          glitchChars[Math.floor(Math.random() * glitchChars.length)]
+        );
+        setTimeout(() => setGlitchText(""), 100);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const formatTime = (
+    date: Date
+  ): { hours: string; minutes: string; seconds: string } => {
+    return {
+      hours: date.getHours().toString().padStart(2, "0"),
+      minutes: date.getMinutes().toString().padStart(2, "0"),
+      seconds: date.getSeconds().toString().padStart(2, "0"),
+    };
+  };
+
+  const { hours, minutes, seconds } = formatTime(time);
+
+  return (
+    <div className="w-full border-[1px] border-[#00FF88]/30 rounded-md p-3 mb-3 bg-gradient-to-br from-[#00FF88]/5 to-transparent relative overflow-hidden">
+      {/* Scanning line effect */}
+      <div className="absolute inset-0 opacity-30 pointer-events-none">
+        <div
+          className="absolute inset-0 bg-gradient-to-r from-transparent via-[#00FF88]/20 to-transparent"
+          style={{
+            animation: "clockScan 3s linear infinite",
+            background: "linear-gradient(90deg, transparent, rgba(0,255,136,0.3), transparent)",
+          }}
+        />
+      </div>
+
+      <div className="flex justify-between items-center mb-2 relative z-10">
+        <h3 className="text-[#00FF88] text-xs font-bold tracking-wide flex items-center gap-1">
+          <div className="w-2 h-2 border border-[#00FF88] rounded-full animate-pulse" />
+          SYSTEM TIME
+        </h3>
+        <span className="text-[#FF0080] text-xs font-mono">
+          {time
+            .toLocaleDateString("en-US", {
+              month: "short",
+              day: "2-digit",
+              year: "2-digit",
+            })
+            .toUpperCase()}
+        </span>
+      </div>
+
+      {/* Digital Clock Display */}
+      <div className="relative z-10 flex items-center justify-center">
+        <div className="font-mono text-2xl font-bold tracking-wider flex items-center gap-1">
+          <span className="text-[#00FF88] drop-shadow-[0_0_10px_rgba(0,255,136,0.8)]">
+            {hours}
+          </span>
+          <span className="text-[#00BFFF] animate-pulse text-xl">:</span>
+          <span className="text-[#00BFFF] drop-shadow-[0_0_10px_rgba(0,191,255,0.8)]">
+            {minutes}
+          </span>
+          <span className="text-[#FF0080] animate-pulse text-xl">:</span>
+          <span className="text-[#FF0080] drop-shadow-[0_0_10px_rgba(255,0,128,0.8)] relative">
+            {glitchText || seconds}
+          </span>
+        </div>
+      </div>
+
+      <div className="absolute top-1 right-1 w-4 h-4 opacity-50">
+        <div className="w-full h-0.5 bg-[#00FF88] animate-pulse" />
+        <div className="w-0.5 h-full bg-[#00FF88] animate-pulse absolute top-0 right-0" />
+        <div className="w-1 h-1 bg-[#00FF88] rounded-full absolute top-0 right-0 animate-pulse" />
+      </div>
+
+      <div className="absolute bottom-1 left-1 w-4 h-4 opacity-50">
+        <div className="w-full h-0.5 bg-[#FF0080] animate-pulse" />
+        <div className="w-0.5 h-full bg-[#FF0080] animate-pulse" />
+        <div className="w-1 h-1 bg-[#FF0080] rounded-full animate-pulse" />
+      </div>
+
+      <style jsx>{`
+        @keyframes clockScan {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(100%);
+          }
+        }
+      `}</style>
+    </div>
+  );
+};
+
+// MusicVisualizer unchanged (not shown here due to length)
+
 const SideNavbar: React.FC = () => {
   return (
     <div className="w-[16.65%] py-3 h-full border-r-[3px] border-[#085948] relative overflow-hidden">
@@ -445,7 +761,6 @@ const SideNavbar: React.FC = () => {
       `}</style>
 
       <div className="w-full h-[11.8%] bg-gradient-to-r from-[#000103] to-[#001a0f] border-b-[0.5px] px-5 border-[#00FF88]/30 flex items-center justify-center gap-3 relative">
-        {/* Glowing border effect */}
         <div className="absolute inset-0 border-b-[1px] border-[#00FF88]/50 shadow-[0_1px_10px_rgba(0,255,136,0.3)]"></div>
 
         <div className="w-[50px] h-[50px] rounded-full relative overflow-hidden border-2 border-[#00FF88]/30">
@@ -468,7 +783,6 @@ const SideNavbar: React.FC = () => {
       </div>
 
       <div className="w-full flex flex-col px-5 py-5 items-center justify-between h-[88.2%] bg-gradient-to-b from-[#01060A] to-[#000a03] relative overflow-hidden">
-        {/* Animated background scan lines for bottom section only */}
         <div className="absolute inset-0 opacity-15 pointer-events-none">
           <div
             className="absolute inset-0 bg-gradient-to-r from-transparent via-[#00FF88]/20 to-transparent"
@@ -486,21 +800,23 @@ const SideNavbar: React.FC = () => {
             title="Home"
             subtitle="Command Center"
             isActive={true}
+            path="/"
           />
           <NavItem
             icon={Zap}
             title="Create AI Agent"
             subtitle="Deploy Intelligence"
+            path="/createAgent"
           />
           <NavItem
             icon={ShoppingBag}
             title="Marketplace"
             subtitle="Trade Assets"
+            path="/marketplace"
           />
-          <NavItem icon={Wallet} title="Wallet" subtitle="Crypto Vault" />
+          <NavItem icon={Wallet} title="Wallet" subtitle="Crypto Vault" path="/wallet" />
         </div>
 
-        {/* Cyberpunk Clock and Music Visualizer at the bottom */}
         <div className="relative z-10 w-full">
           <CyberpunkClock />
           <MusicVisualizer />
