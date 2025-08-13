@@ -459,7 +459,7 @@ const SideNavbar: React.FC = () => {
 
         <div className="relative z-10">
           <h1 className="text-[#00FF88] uppercase font-bold text-lg tracking-wider drop-shadow-[0_0_10px_rgba(0,255,136,0.5)]">
-            ZLag
+            Zerolag
           </h1>
           <p className="text-[#94A3B8] text-xs leading-none opacity-70 font-semibold tracking-wide">
             Decentralised AI studio
