@@ -112,7 +112,7 @@ const MarketplacePage = () => {
     const fetchAgents = async () => {
       try {
         setLoading(true)
-        const response = await fetch('http://localhost:4000/agents/')
+        const response = await fetch('https://create-agent-backend.vercel.app/agents/')
         const result = await response.json()
         
         if (result.success) {

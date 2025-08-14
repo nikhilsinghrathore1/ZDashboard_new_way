@@ -147,7 +147,7 @@ const AgentChatPage: React.FC = () => {
       try {
         console.log(`Fetching agent details for ID: ${agentId}`);
         
-        const response = await fetch(`http://localhost:4000/agents/${agentId}`, {
+        const response = await fetch(`https://create-agent-backend.vercel.app/agents/${agentId}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -334,7 +334,7 @@ and this the history of chats taks this as reference when generating new answers
 
 
 
-      const response = await fetch('http://localhost:4000/chat', {
+      const response = await fetch('https://create-agent-backend.vercel.app/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

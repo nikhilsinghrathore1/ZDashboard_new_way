@@ -86,7 +86,7 @@ const AgentCreationPage = () => {
     console.log("this is the payload: " , payload); 
       console.log('Sending payload:', payload);
 
-      const response = await fetch('http://localhost:4000/agents', {
+      const response = await fetch('https://create-agent-backend.vercel.app/agents', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
