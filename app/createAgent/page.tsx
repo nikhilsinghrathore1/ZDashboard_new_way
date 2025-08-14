@@ -6,6 +6,7 @@ const AgentCreationPage = () => {
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -29,31 +30,100 @@ const AgentCreationPage = () => {
     { value: 'conversational', label: 'Conversational & Engaging' }
   ];
 
-  const handleInputChange = (e:any) => {
+  const handleInputChange = (e: any) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
+    // Clear error when user starts typing
+    if (error) setError('');
   };
 
-  const handleCreateAgent = (e:any) => {
+  // Function to map personality and response style to capabilities
+  const getCapabilities = (personality: string, responseStyle: string) => {
+    const capabilityMap: { [key: string]: string[] } = {
+      'professional': ['business-analysis', 'strategic-planning', 'communication'],
+      'analytical': ['data-analysis', 'research', 'problem-solving'],
+      'creative': ['content-creation', 'brainstorming', 'design-thinking'],
+      'supportive': ['mentoring', 'guidance', 'motivation'],
+      'consultative': ['advisory', 'consultation', 'recommendations'],
+      'technical': ['coding', 'debugging', 'technical-documentation']
+    };
+
+    const styleMap: { [key: string]: string[] } = {
+      'concise': ['summarization'],
+      'detailed': ['comprehensive-analysis'],
+      'structured': ['organization', 'planning'],
+      'conversational': ['communication', 'engagement']
+    };
+
+    const personalityCapabilities = capabilityMap[personality] || [];
+    const styleCapabilities = styleMap[responseStyle] || [];
+    
+    // Combine and deduplicate capabilities
+    return Array.from(new Set([...personalityCapabilities, ...styleCapabilities]));
+  };
+
+  const handleCreateAgent = async (e: any) => {
     e.preventDefault();
-    if (!formData.name || !formData.description) return;
+    if (!formData.name || !formData.description) {
+      setError('Please fill in all required fields');
+      return;
+    }
     
     setIsLoading(true);
+    setError('');
 
-    // Simulate API call
-    setTimeout(() => {
-      const mockAgentId = Math.random().toString(36).substr(2, 9);
-      console.log('Created agent:', { ...formData, id: mockAgentId });
+    try {
+      // Prepare the payload according to backend expectations
+      const payload = {
+        name: formData.name,
+        description: formData.description,
+        model: "gemini-pro", // Default model as specified
+        capabilities: getCapabilities(formData.personality, formData.responseStyle)
+      };
+
+    console.log("this is the payload: " , payload); 
+      console.log('Sending payload:', payload);
+
+      const response = await fetch('http://localhost:4000/agents', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+
+      const responseData = await response.json();
+      console.log('Agent created successfully:', responseData);
       
-      // Redirect to agent page
-      router.push(`/agent/${mockAgentId}`);
-    }, 2500);
+      // Only redirect after successful database storage
+      // Assuming the backend returns an ID field
+      const agentId = responseData.data.id || responseData.data._id || responseData.data.agentId;
+      
+      if (agentId) {
+        router.push(`/agent/${agentId}`);
+      } else {
+        // If no ID is returned, you might want to handle this differently
+        console.warn('No agent ID returned from backend');
+        router.push('/agents'); // Redirect to agents list page
+      }
+
+    } catch (error: any) {
+      console.error('Error creating agent:', error);
+      setError(error.message || 'Failed to create agent. Please try again.');
+      setIsLoading(false);
+    }
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
+    setError('');
     setFormData({
       name: '',
       description: '',
@@ -71,10 +141,10 @@ const AgentCreationPage = () => {
             <div className="absolute inset-0 w-32 h-32 mx-auto border-2 border-green-300 border-b-transparent rounded-full animate-spin animation-delay-150 shadow-md shadow-green-300/30"></div>
           </div>
           <div className="text-green-400 text-xl font-mono mb-4 animate-pulse">
-            INITIALIZING AGENT...
+            DEPLOYING AGENT...
           </div>
           <div className="text-green-300 text-sm font-mono opacity-70">
-            Booting neural pathways...
+            Storing neural pathways to database...
           </div>
         </div>
         <style jsx>{`
@@ -102,21 +172,19 @@ const AgentCreationPage = () => {
         {/* Header */}
         <div className="text-center mb-10">
           <div className="inline-block px-4 py-2 bg-green-400/10 border border-green-400/30 rounded-full text-green-400 text-sm font-mono mb-6">
-            Ai Agent DEPLOYMENT SYSTEM
+            AI Agent DEPLOYMENT SYSTEM
           </div>
           <h1 className="text-4xl md:text-6xl font-light mb-6 text-white tracking-wide">
             Autonomous Agent
             <span className="block text-green-400 font-bold">Architecture</span>
           </h1>
           <p className="text-lg text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            Deploy sophisticated AI agents with advanced Ai, contextual memory, 
+            Deploy sophisticated AI agents with advanced AI, contextual memory, 
             and adaptive learning capabilities through our enterprise-grade infrastructure.
           </p>
         </div>
 
         <div className='w-full h-fit flex flex-col items-center justify-center'>
-       
-          
           <button
             onClick={() => setIsModalOpen(true)}
             className="group relative inline-flex items-center justify-center px-10 py-4 text-base font-semibold text-black bg-green-400 rounded-lg transition-all duration-300 hover:bg-green-300 hover:shadow-lg hover:shadow-green-400/50 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-green-400/20"
@@ -130,8 +198,6 @@ const AgentCreationPage = () => {
             <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-green-300 to-green-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
           </button>
         </div>
-
-        
 
         {/* Workflow Diagram */}
         <div className="relative max-w-6xl mx-auto mb-20">
@@ -263,8 +329,6 @@ const AgentCreationPage = () => {
 
         {/* Advanced CTA Section */}
         <div className="text-center">
- 
-          
           {/* Technical Specs */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12 text-center">
             {[
@@ -293,16 +357,6 @@ const AgentCreationPage = () => {
           <div className="relative bg-gray-900 border border-green-500/50 rounded-lg shadow-2xl shadow-green-400/20 w-full max-w-md max-h-[90vh] overflow-y-auto animate-in fade-in-0 zoom-in-95 duration-300">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-green-400">Agent Configuration</h2>
-                <button
-                  onClick={closeModal}
-                  className="text-gray-400 hover:text-green-400 text-2xl transition-colors duration-200"
-                >
-                  ×
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-green-400">Neural Configuration</h2>
                 <button
                   onClick={closeModal}
@@ -312,7 +366,14 @@ const AgentCreationPage = () => {
                 </button>
               </div>
 
-              <div className="space-y-6">
+              {/* Error Message */}
+              {error && (
+                <div className="mb-4 p-3 bg-red-900/50 border border-red-500/50 rounded-lg text-red-300 text-sm">
+                  {error}
+                </div>
+              )}
+
+              <form onSubmit={handleCreateAgent} className="space-y-6">
                 {/* Agent Identity */}
                 <div className="space-y-4">
                   <div>
@@ -326,6 +387,7 @@ const AgentCreationPage = () => {
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 bg-black border border-green-500/50 rounded-lg text-white placeholder-gray-500 focus:border-green-400 focus:ring-2 focus:ring-green-400/20 focus:outline-none transition-all duration-200"
                       placeholder="Enter agent designation"
+                      required
                     />
                   </div>
 
@@ -340,6 +402,7 @@ const AgentCreationPage = () => {
                       rows={4}
                       className="w-full px-4 py-3 bg-black border border-green-500/50 rounded-lg text-white placeholder-gray-500 focus:border-green-400 focus:ring-2 focus:ring-green-400/20 focus:outline-none transition-all duration-200 resize-none"
                       placeholder="Define the agent's primary function, role, and operational scope..."
+                      required
                     />
                   </div>
                 </div>
@@ -385,16 +448,37 @@ const AgentCreationPage = () => {
                   </div>
                 </div>
 
+                {/* Preview of selected capabilities */}
+                <div className="p-4 bg-green-400/5 border border-green-500/20 rounded-lg">
+                  <div className="text-sm font-medium text-green-300 mb-2">Generated Capabilities:</div>
+                  <div className="flex flex-wrap gap-2">
+                    {getCapabilities(formData.personality, formData.responseStyle).map((capability, index) => (
+                      <span key={index} className="px-2 py-1 bg-green-400/10 text-green-300 text-xs rounded-full">
+                        {capability}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="pt-6 border-t border-green-500/20">
                   <button
-                    onClick={handleCreateAgent}
-                    disabled={!formData.name || !formData.description}
+                    type="submit"
+                    disabled={!formData.name || !formData.description || isLoading}
                     className="w-full px-6 py-4 bg-green-400 text-black font-semibold rounded-lg hover:bg-green-300 transition-all duration-300 hover:shadow-lg hover:shadow-green-400/30 focus:outline-none focus:ring-4 focus:ring-green-400/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                   >
-                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
-                    </svg>
-                    DEPLOY NEURAL AGENT
+                    {isLoading ? (
+                      <>
+                        <div className="w-5 h-5 mr-2 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                        DEPLOYING...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                        </svg>
+                        DEPLOY NEURAL AGENT
+                      </>
+                    )}
                   </button>
                   
                   <div className="mt-4 text-center">
@@ -403,11 +487,11 @@ const AgentCreationPage = () => {
                     </div>
                   </div>
                 </div>
-              </div>
+              </form>
             </div>
           </div>
         </div>
-      )}
+      )} 
     </div>
   );
 };
