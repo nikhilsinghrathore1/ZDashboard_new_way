@@ -289,44 +289,30 @@ const TopNavbar = () => {
 
   return (
     <header 
-      className={`w-full h-[9%] border-b border-white/10 px-6 flex items-center justify-between sticky top-0 z-50 transition-all duration-500 backdrop-blur-sm ${
-        isNavHovered 
-          ? 'bg-gradient-to-r from-[#4cc9ff]/20 via-[#7a5cff]/15 to-[#00fff0]/20 shadow-[0_0_40px_rgba(76,201,255,0.3)]' 
-          : 'bg-black/60'
-      }`}
+      className="w-full h-[9%] border-b border-white/10 px-6 flex items-center justify-between sticky top-0 z-50 transition-all duration-500 backdrop-blur-sm bg-black/60"
       onMouseEnter={() => setIsNavHovered(true)}
       onMouseLeave={() => setIsNavHovered(false)}
       style={{
-        backgroundImage: isNavHovered 
-          ? 'radial-gradient(circle at 20% 50%, rgba(76,201,255,0.25) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(0,255,240,0.2) 0%, transparent 50%), linear-gradient(90deg, rgba(122,92,255,0.15) 0%, rgba(76,201,255,0.2) 50%, rgba(0,255,240,0.15) 100%)'
-          : 'linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(16, 16, 16, 0.6) 100%)'
+        backgroundImage: 'linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(16, 16, 16, 0.6) 100%)',
+        boxShadow: isNavHovered 
+          ? '0 0 50px rgba(76,201,255,0.4), 0 0 100px rgba(0,255,240,0.2), 0 0 150px rgba(122,92,255,0.15)'
+          : '0 4px 20px rgba(0,0,0,0.3)'
       }}
     >
-      {/* Liquid grid overlay */}
-      <div className={`absolute inset-0 opacity-20 transition-opacity duration-500 ${isNavHovered ? 'opacity-30' : 'opacity-10'}`}
+      {/* Subtle grid overlay */}
+      <div className={`absolute inset-0 transition-opacity duration-500 ${isNavHovered ? 'opacity-20' : 'opacity-10'}`}
         style={{
           backgroundImage: `
-            linear-gradient(rgba(76,201,255,0.15) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0,255,240,0.15) 1px, transparent 1px)
+            linear-gradient(rgba(76,201,255,0.1) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0,255,240,0.1) 1px, transparent 1px)
           `,
           backgroundSize: '20px 20px'
         }}
       ></div>
 
-      {/* Liquid flow background */}
-      <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden">
-        <div
-          className="absolute inset-0"
-          style={{
-            background: 'conic-gradient(from 45deg at 30% 70%, rgba(76,201,255,0.1), rgba(0,255,240,0.08), rgba(122,92,255,0.06), rgba(76,201,255,0.1))',
-            animation: isNavHovered ? 'navFlow 8s ease-in-out infinite alternate' : 'none'
-          }}
-        />
-      </div>
-
-      {/* Neon flowing lines */}
-      <div className={`absolute top-0 left-0 h-px bg-gradient-to-r from-transparent via-[#4cc9ff] to-transparent transition-all duration-500 ${isNavHovered ? 'opacity-80 w-full shadow-[0_0_10px_rgba(76,201,255,0.6)]' : 'opacity-0 w-0'}`}></div>
-      <div className={`absolute bottom-0 right-0 h-px bg-gradient-to-l from-transparent via-[#00fff0] to-transparent transition-all duration-500 ${isNavHovered ? 'opacity-60 w-3/4 shadow-[0_0_8px_rgba(0,255,240,0.5)]' : 'opacity-0 w-0'}`}></div>
+      {/* Subtle edge glow lines */}
+      <div className={`absolute top-0 left-0 h-px bg-gradient-to-r from-transparent via-[#4cc9ff] to-transparent transition-all duration-500 ${isNavHovered ? 'opacity-60 w-full' : 'opacity-0 w-0'}`}></div>
+      <div className={`absolute bottom-0 right-0 h-px bg-gradient-to-l from-transparent via-[#00fff0] to-transparent transition-all duration-500 ${isNavHovered ? 'opacity-40 w-3/4' : 'opacity-0 w-0'}`}></div>
 
       {/* Search Bar */}
       <div className="flex-1 max-w-md relative z-10">
@@ -481,13 +467,6 @@ const TopNavbar = () => {
           }}
         ></div>
       )}
-
-      <style jsx>{`
-        @keyframes navFlow {
-          0% { transform: translateX(-2%) rotate(0deg) scale(1); }
-          100% { transform: translateX(2%) rotate(2deg) scale(1.02); }
-        }
-      `}</style>
     </header>
   );
 };

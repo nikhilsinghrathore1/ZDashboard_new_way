@@ -59,7 +59,6 @@
 
 
 
-import { FileText } from 'lucide-react'
 import React from 'react'
 
 const BadgeCard = ({Icon, title, description}) => {

@@ -98,9 +98,9 @@ export default function Home() {
         </div>
 
         <div className="w-full h-[50vh] flex gap-7 items-start pt-5  ">
-          <AiAgentsCard img={img}  title={"CoderGen"} description={"autonomous code generator that builds dapp"} price={"2.5 ZLAG"} owner={"by TeamZ"}/>
-          <AiAgentsCard img={img2}  title={"CoderGen"} description={"autonomous code generator that builds dapp"} price={"2.5 ZLAG"} owner={"by TeamZ"}/>
-          <AiAgentsCard img={img1}  title={"CoderGen"} description={"autonomous code generator that builds dapp"} price={"2.5 ZLAG"} owner={"by TeamZ"}/>
+          <AiAgentsCard url={"/agent/codeGen"} img={img}  title={"Lana codes"} description={"autonomous code generator that builds dapp"} price={"2.5 ZLAG"} owner={"by TeamZ"}/>
+          <AiAgentsCard url={"/agent/trading"} img={img2}  title={"QuickieTrader"} description={"autonomous ai assistant that helps you trade"} price={"2.5 ZLAG"} owner={"by TeamZ"}/>
+          <AiAgentsCard url={"/agent/pushit"} img={img1}  title={"PushIt"} description={"autonomous github ai agent that works 24/7"} price={"2.5 ZLAG"} owner={"by TeamZ"}/>
 
         </div>
 

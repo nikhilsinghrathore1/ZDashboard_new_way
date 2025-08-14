@@ -20,7 +20,7 @@ const CodeGenPage = () => {
   const hasInitialized = useRef(false);
 
   // Function to get code from backend
-  const GetCode = async (promptText) => {
+  const GetCode = async (promptText:any) => {
     console.log("running the gencode function");
     setLoading(true);
     console.log("Prompt:", promptText);

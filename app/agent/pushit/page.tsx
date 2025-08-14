@@ -126,23 +126,7 @@ const GitHubTrackerApp = () => {
               </h2>
               
               <div className="space-y-4">
-                <button
-                  onClick={handleAnalyze}
-                  disabled={isAnalyzing}
-                  className="w-full bg-green-600 hover:bg-green-500 disabled:bg-gray-700 text-black disabled:text-gray-400 font-bold py-4 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 border-2 border-green-400"
-                >
-                  {isAnalyzing ? (
-                    <span className="flex items-center justify-center">
-                      <div className="animate-spin h-5 w-5 mr-2 border-2 border-black border-t-transparent rounded-full"></div>
-                      ANALYZING...
-                    </span>
-                  ) : (
-                    <span className="flex items-center justify-center">
-                      <FileText className="h-5 w-5 mr-2" />
-                      INITIATE ANALYSIS
-                    </span>
-                  )}
-                </button>
+             
                 
                 <button
                   onClick={handleGitHubRedirect}
@@ -192,18 +176,24 @@ const GitHubTrackerApp = () => {
                   <div key={index} className="flex items-center justify-between p-3 bg-black border border-green-800 rounded">
                     <div className="flex items-center space-x-3">
                       <div className={`w-2 h-2 rounded-full ${
-                        activity.status === 'completed' ? 'bg-green-400' : 'bg-yellow-400 animate-pulse'
+                        // @ts-ignore
+                        activity.status=== 'completed' ? 'bg-green-400' : 'bg-yellow-400 animate-pulse'
                       }`}></div>
                       <div>
+                      {/* @ts-ignore */}
+
                         <div className="font-semibold text-green-300">{activity.repo}</div>
+                      {/* @ts-ignore */}
                         <div className="text-xs text-gray-400">{activity.time}</div>
                       </div>
                     </div>
                     <div className={`px-2 py-1 text-xs rounded border ${
+                      // @ts-ignore
                       activity.status === 'completed' 
                         ? 'bg-green-900 text-green-300 border-green-600'
                         : 'bg-yellow-900 text-yellow-300 border-yellow-600'
                     }`}>
+                      {/*  @ts-ignore */}
                       {activity.status.toUpperCase()}
                     </div>
                   </div>
