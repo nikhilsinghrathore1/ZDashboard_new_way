@@ -10,6 +10,8 @@ import {
 } from "@codesandbox/sandpack-react";
 import Extras from './data/Extras';
 import Extra from './data/Extra';
+import { dracula } from "@codesandbox/sandpack-themes";
+
 import { sandpackDark } from "@codesandbox/sandpack-themes";
 
 const CodeGenPage = () => {
@@ -22,7 +24,7 @@ const CodeGenPage = () => {
   // Function to get code from backend
   const GetCode = async (promptText:any) => {
     console.log("running the gencode function");
-    setLoading(true);
+    setLoading(false);
     console.log("Prompt:", promptText);
          
     try {
@@ -49,7 +51,7 @@ const CodeGenPage = () => {
       
       console.log("Sending payload:", payload);
       
-      const result = await axios.post(`https://forj-backend.vercel.app/code/genCode`, payload);
+      const result = await axios.post(`https://forj-backend.vercel.app/code/genCodes`, payload);
       console.log("Backend response:", result);
        
       const aiResp = result.data.resp;
@@ -94,51 +96,75 @@ const CodeGenPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-green-400 font-mono relative overflow-hidden">
-      {/* Cyberpunk grid background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-black">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.03)_1px,transparent_1px)] bg-[size:20px_20px]"></div>
+    <div className="min-h-screen bg-black text-white font-sans relative overflow-hidden">
+      {/* Starfield background */}
+      <div className="absolute inset-0 bg-black">
+        {/* Generate twinkling stars */}
+        {[...Array(150)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 bg-white rounded-full animate-pulse"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 3}s`,
+              animationDuration: `${2 + Math.random() * 2}s`,
+              opacity: 0.3 + Math.random() * 0.7,
+            }}
+          />
+        ))}
+        {/* Larger twinkling stars */}
+        {[...Array(30)].map((_, i) => (
+          <div
+            key={`large-${i}`}
+            className="absolute w-2 h-2 bg-purple-300 rounded-full animate-pulse"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 4}s`,
+              animationDuration: `${3 + Math.random() * 2}s`,
+              opacity: 0.2 + Math.random() * 0.5,
+            }}
+          />
+        ))}
       </div>
 
-      {/* Glowing border effect */}
-      <div className="absolute inset-0 border border-green-500/20 shadow-[inset_0_0_50px_rgba(0,255,0,0.1)]"></div>
-
-      <div className="relative z-10 px-6 pb-6 pt-1 h-screen flex flex-col">
+      <div className="relative z-10 px-8 pb-8 pt-5 h-screen flex flex-col">
         
         {/* Toggle Button */}
-        <div className="mb-1 flex justify-end">
+        <div className="mb- flex justify-end">
          
         </div>
 
         {/* Main code editor area */}
-        <div className="flex-1 h-[50%] mb-6 relative">
-          <div className="h-full bg-gray-900/30 border-2 border-green-500/40 rounded-lg backdrop-blur-sm relative overflow-hidden">
+        <div className="flex-1 h-[50%] mb-8 relative">
+          <div className="h-full bg-gray-900/80 border border-purple-500/30 rounded-2xl backdrop-blur-sm relative overflow-hidden shadow-2xl">
             {/* Hidden checkbox for toggle control */}
             <input type="checkbox" id="preview-toggle" className="hidden" />
             
             {/* Code editor header */}
-            <div className="bg-gray-800/50 border-b border-green-500/30 p-2 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span className="ml-4 text-green-400 text-sm">editor.js</span>
+            <div className="bg-gray-800/60 border-b border-purple-500/20 py-2 px-4 flex items-center justify-between rounded-t-2xl">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 bg-red-400 rounded-full"></div>
+                <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                <span className="ml-6 text-purple-300 text-sm font-medium">Code Editor</span>
               </div>
               <label
                 htmlFor="preview-toggle"
-                className="px-4 py-2 border-2 rounded-lg font-mono text-sm transition-all duration-300 cursor-pointer bg-gray-900/50 border-green-500/50 text-green-500 hover:border-green-400"
+                className="px-6 py-2 border border-purple-500/50 rounded-xl font-medium text-sm transition-all duration-300 cursor-pointer bg-gray-800/50 text-purple-300 hover:border-purple-400 hover:bg-purple-500/10"
               >
-                <span className="toggle-text-show">▶ SHOW PREVIEW</span>
-                <span className="toggle-text-hide hidden">◀ HIDE PREVIEW</span>
+                <span className="toggle-text-show">▶ Show Preview</span>
+                <span className="toggle-text-hide hidden">◀ Hide Preview</span>
               </label>
             </div>
 
             {/* Code editor placeholder with loading state */}
-            <div className=" h-full bg-green-200 flex items-center justify-center">
+            <div className="h-full bg-gray-900/20 flex items-center justify-center">
               {loading ? (
-                <div className="flex flex-col items-center justify-center text-green-400">
-                  <div className="w-8 h-8 border-2 border-green-400 border-t-transparent rounded-full animate-spin mb-4"></div>
-                  <p className="text-sm">Generating code...</p>
+                <div className="flex flex-col items-center justify-center text-purple-300">
+                  <div className="w-10 h-10 border-3 border-purple-400 border-t-transparent rounded-full animate-spin mb-6"></div>
+                  <p className="text-base">Generating your code...</p>
                 </div>
               ) : (
                 <div className="relative w-full h-full">
@@ -159,7 +185,7 @@ const CodeGenPage = () => {
                     <SandpackLayout>
                       <SandpackFileExplorer style={{ height: "71vh" }} />
                       <SandpackCodeEditor
-                        style={{ height: "71vh", fontSize: "12px", lineHeight: "30px" }}
+                        style={{ height: "71vh", fontSize: "13px", lineHeight: "1.6" }}
                       />
                       <div className="preview-container absolute w-full top-0 left-0 transition-all duration-500 ease-in-out">
                         <SandpackPreview
@@ -173,23 +199,17 @@ const CodeGenPage = () => {
                 </div>
               )}
             </div>
-
-            {/* Glowing corners */}
-            <div className="absolute top-0 left-0 w-20 h-20 border-t-2 border-l-2 border-green-400/60 rounded-tl-lg"></div>
-            <div className="absolute top-0 right-0 w-20 h-20 border-t-2 border-r-2 border-green-400/60 rounded-tr-lg"></div>
-            <div className="absolute bottom-0 left-0 w-20 h-20 border-b-2 border-l-2 border-green-400/60 rounded-bl-lg"></div>
-            <div className="absolute bottom-0 right-0 w-20 h-20 border-b-2 border-r-2 border-green-400/60 rounded-br-lg"></div>
           </div>
         </div>
 
         {/* Input bar */}
         <div className="relative">
           <div className="relative">
-            <div className="bg-gray-900/50 border-2 border-green-500/50 rounded-lg backdrop-blur-sm overflow-hidden">
-              <div className="flex items-center p-2">
-                <div className="flex items-center gap-2 px-3">
-                  <div className={`w-2 h-2 rounded-full ${loading ? 'bg-yellow-400' : 'bg-green-400'} animate-pulse`}></div>
-                  <span className="text-green-500 text-sm">INPUT:</span>
+            <div className="bg-gray-900/70 border border-purple-500/30 rounded-2xl backdrop-blur-sm overflow-hidden shadow-xl">
+              <div className="flex items-center p-4">
+                <div className="flex items-center gap-3 px-4">
+                  <div className={`w-3 h-3 rounded-full ${loading ? 'bg-yellow-400' : 'bg-purple-400'} animate-pulse`}></div>
+                  <span className="text-purple-300 text-sm font-medium">Prompt:</span>
                 </div>
                 
                 <input
@@ -201,52 +221,42 @@ const CodeGenPage = () => {
                       handleInputSubmit();
                     }
                   }}
-                  placeholder="Enter modifications to neural network..."
-                  className="flex-1 bg-transparent text-green-300 placeholder-green-500/40 outline-none px-2 py-2 text-sm font-mono"
+                  placeholder="Describe what you want to build..."
+                  className="flex-1 bg-transparent text-white placeholder-gray-400 outline-none px-3 py-3 text-sm"
                   disabled={loading}
                 />
                 
                 <button
                   onClick={handleInputSubmit}
                   disabled={loading || !userInput.trim()}
-                  className="px-6 py-2 bg-green-500/20 border border-green-500/50 text-green-400 hover:bg-green-500/30 hover:border-green-400 transition-all duration-300 rounded text-sm font-mono tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-8 py-3 bg-purple-600/80 border border-purple-500/50 text-white hover:bg-purple-500 hover:border-purple-400 transition-all duration-300 rounded-xl text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  {loading ? 'PROCESSING...' : 'EXECUTE'}
+                  {loading ? 'Processing...' : 'Generate'}
                 </button>
               </div>
             </div>
-            
-            {/* Glowing effect on focus */}
-            <div className="absolute inset-0 rounded-lg bg-green-500/5 blur-xl -z-10 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300"></div>
           </div>
 
           {/* Status bar */}
-          <div className="mt-2 flex items-center justify-between text-xs text-green-500/60">
-            <div className="flex items-center gap-4">
-              <span>STATUS: {loading ? 'PROCESSING' : 'READY'}</span>
-              <span>CONN: SECURE</span>
-              <span>MEM: 2.4GB</span>
+          <div className="mt-3 flex items-center justify-between text-xs text-gray-400">
+            <div className="flex items-center gap-6">
+              <span>Status: {loading ? 'Processing' : 'Ready'}</span>
+              <span>Connection: Secure</span>
+              <span>Memory: 2.4GB</span>
             </div>
-            <div className="flex items-center gap-1">
-              <div className={`w-1 h-1 rounded-full animate-pulse ${loading ? 'bg-yellow-400' : 'bg-green-400'}`}></div>
-              <span>REAL_TIME_SYNC</span>
+            <div className="flex items-center gap-2">
+              <div className={`w-2 h-2 rounded-full ${loading ? 'bg-yellow-400' : 'bg-purple-400'} animate-pulse`}></div>
+              <span>Live Sync</span>
             </div>
           </div>
         </div>
 
         {/* Display current prompt for debugging */}
         {prompt && (
-          <div className="mt-2 text-xs text-green-500/40 truncate">
+          <div className="mt-3 text-xs text-gray-500 truncate">
             Current Prompt: {prompt}
           </div>
         )}
-      </div>
-
-      {/* Floating particles effect */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-1 h-1 bg-green-400/30 rounded-full animate-ping"></div>
-        <div className="absolute top-3/4 right-1/3 w-1 h-1 bg-green-400/30 rounded-full animate-ping" style={{animationDelay: '1s'}}></div>
-        <div className="absolute bottom-1/4 left-1/2 w-1 h-1 bg-green-400/30 rounded-full animate-ping" style={{animationDelay: '2s'}}></div>
       </div>
 
       {/* CSS for toggle animation */}
@@ -263,10 +273,10 @@ const CodeGenPage = () => {
         
         /* Toggle button styling changes when checked */
         #preview-toggle:checked ~ * label[for="preview-toggle"] {
-          background-color: rgba(34, 197, 94, 0.2) !important;
-          border-color: rgb(74, 222, 128) !important;
-          color: rgb(134, 239, 172) !important;
-          box-shadow: 0 0 10px rgba(0, 255, 0, 0.3) !important;
+          background-color: rgba(147, 51, 234, 0.2) !important;
+          border-color: rgb(196, 125, 245) !important;
+          color: rgb(221, 170, 254) !important;
+          box-shadow: 0 0 20px rgba(147, 51, 234, 0.3) !important;
         }
         
         /* Text switching for show/hide */
@@ -284,6 +294,12 @@ const CodeGenPage = () => {
         
         #preview-toggle:not(:checked) ~ * .toggle-text-hide {
           display: none !important;
+        }
+
+        /* Enhanced twinkling animation */
+        @keyframes twinkle {
+          0%, 100% { opacity: 0.3; }
+          50% { opacity: 1; }
         }
       `}</style>
     </div>

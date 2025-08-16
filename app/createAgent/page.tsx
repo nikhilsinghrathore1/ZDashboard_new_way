@@ -134,16 +134,16 @@ const AgentCreationPage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center overflow-hidden">
-        <div className="text-center">
+      <div className="min-h-screen bg-black flex items-center justify-center overflow-hidden starfield">
+        <div className="text-center relative z-10">
           <div className="relative mb-8">
-            <div className="w-32 h-32 mx-auto border-4 border-green-400 border-t-transparent rounded-full animate-spin shadow-lg shadow-green-400/50"></div>
-            <div className="absolute inset-0 w-32 h-32 mx-auto border-2 border-green-300 border-b-transparent rounded-full animate-spin animation-delay-150 shadow-md shadow-green-300/30"></div>
+            <div className="w-32 h-32 mx-auto border-4 border-purple-400 border-t-transparent rounded-full animate-spin shadow-lg shadow-purple-400/50"></div>
+            <div className="absolute inset-0 w-32 h-32 mx-auto border-2 border-purple-300 border-b-transparent rounded-full animate-spin animation-delay-150 shadow-md shadow-purple-300/30"></div>
           </div>
-          <div className="text-green-400 text-xl font-mono mb-4 animate-pulse">
-            DEPLOYING AGENT...
+          <div className="text-purple-400 text-xl font-medium mb-4 animate-pulse">
+            Deploying Agent...
           </div>
-          <div className="text-green-300 text-sm font-mono opacity-70">
+          <div className="text-purple-300 text-sm opacity-70">
             Storing neural pathways to database...
           </div>
         </div>
@@ -158,56 +158,47 @@ const AgentCreationPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white overflow-x-hidden">
-      {/* Background Pattern */}
-      <div className="fixed inset-0 opacity-10">
-        <div className="absolute inset-0 bg-gradient-to-br from-green-900/20 to-black"></div>
-        <div className="absolute inset-0" style={{
-          backgroundImage: 'radial-gradient(circle at 25% 25%, rgba(0, 255, 0, 0.1) 0%, transparent 50%)',
-        }}></div>
-      </div>
-
+    <div className="min-h-screen bg-black text-white overflow-x-hidden starfield">
       {/* Hero Section */}
-      <div className="relative z-10 container mx-auto px-4 py-12">
+      <div className="relative z-10 container mx-auto px-6 py-16">
         {/* Header */}
-        <div className="text-center mb-10">
-          <div className="inline-block px-4 py-2 bg-green-400/10 border border-green-400/30 rounded-full text-green-400 text-sm font-mono mb-6">
-            AI Agent DEPLOYMENT SYSTEM
+        <div className="text-center mb-16">
+          <div className="inline-block px-6 py-3 bg-purple-600/20 border border-purple-400/40 rounded-full text-purple-300 text-sm font-medium mb-8">
+            AI Agent Deployment System
           </div>
-          <h1 className="text-4xl md:text-6xl font-light mb-6 text-white tracking-wide">
+          <h1 className="text-5xl md:text-7xl font-light mb-8 text-white tracking-wide">
             Autonomous Agent
-            <span className="block text-green-400 font-bold">Architecture</span>
+            <span className="block text-purple-400 font-semibold">Architecture</span>
           </h1>
-          <p className="text-lg text-gray-300 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
             Deploy sophisticated AI agents with advanced AI, contextual memory, 
             and adaptive learning capabilities through our enterprise-grade infrastructure.
           </p>
         </div>
 
-        <div className='w-full h-fit flex flex-col items-center justify-center'>
+        <div className='w-full h-fit flex flex-col items-center justify-center mb-20'>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="group relative inline-flex items-center justify-center px-10 py-4 text-base font-semibold text-black bg-green-400 rounded-lg transition-all duration-300 hover:bg-green-300 hover:shadow-lg hover:shadow-green-400/50 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-green-400/20"
+            className="group relative inline-flex items-center justify-center px-12 py-5 text-lg font-semibold text-white bg-purple-600 rounded-2xl transition-all duration-300 hover:bg-purple-500 hover:shadow-2xl hover:shadow-purple-600/30 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-purple-400/20"
           >
             <span className="relative z-10 flex items-center">
-              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd"/>
               </svg>
-              INITIALIZE AGENT DEPLOYMENT
+              Initialize Agent Deployment
             </span>
-            <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-green-300 to-green-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
           </button>
         </div>
 
         {/* Workflow Diagram */}
-        <div className="relative max-w-6xl mx-auto mb-20">
+        <div className="relative max-w-7xl mx-auto mb-24">
           {/* Connection Lines */}
           <svg className="absolute inset-0 w-full h-full" viewBox="0 0 800 400">
             <defs>
               <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" style={{stopColor: '#10b981', stopOpacity: 0.3}} />
-                <stop offset="50%" style={{stopColor: '#10b981', stopOpacity: 0.8}} />
-                <stop offset="100%" style={{stopColor: '#10b981', stopOpacity: 0.3}} />
+                <stop offset="0%" style={{stopColor: '#a855f7', stopOpacity: 0.3}} />
+                <stop offset="50%" style={{stopColor: '#a855f7', stopOpacity: 0.8}} />
+                <stop offset="100%" style={{stopColor: '#a855f7', stopOpacity: 0.3}} />
               </linearGradient>
             </defs>
             {/* Flow lines */}
@@ -227,12 +218,12 @@ const AgentCreationPage = () => {
               style={{animationDelay: '0.5s'}}
             />
             {/* Data flow particles */}
-            <circle r="3" fill="#10b981">
+            <circle r="3" fill="#a855f7">
               <animateMotion dur="3s" repeatCount="indefinite">
                 <path d="M 150 200 Q 250 150 350 200" />
               </animateMotion>
             </circle>
-            <circle r="3" fill="#10b981">
+            <circle r="3" fill="#a855f7">
               <animateMotion dur="3s" repeatCount="indefinite" begin="1.5s">
                 <path d="M 450 200 Q 550 150 650 200" />
               </animateMotion>
@@ -240,7 +231,7 @@ const AgentCreationPage = () => {
           </svg>
 
           {/* Process Nodes */}
-          <div className="relative grid grid-cols-1 md:grid-cols-3 gap-8 py-16">
+          <div className="relative grid grid-cols-1 md:grid-cols-3 gap-8 py-20">
             {[
               {
                 phase: "INIT",
@@ -280,43 +271,43 @@ const AgentCreationPage = () => {
               }
             ].map((node, index) => (
               <div key={index} className="relative group">
-                <div className="bg-gradient-to-br from-gray-900/80 to-gray-800/40 backdrop-blur-sm border border-green-500/20 rounded-xl p-8 h-full transition-all duration-500 hover:border-green-400/50 hover:shadow-2xl hover:shadow-green-400/10 hover:transform hover:scale-[1.02]">
+                <div className="bg-gray-900/60 backdrop-blur-sm border border-purple-500/30 rounded-2xl p-8 h-full transition-all duration-500 hover:border-purple-400/60 hover:shadow-2xl hover:shadow-purple-600/20 hover:transform hover:scale-[1.02]">
                   {/* Phase Indicator */}
                   <div className="flex items-center justify-between mb-6">
-                    <div className="px-3 py-1 bg-green-400/10 border border-green-400/30 rounded-full">
-                      <span className="text-green-400 text-xs font-mono font-bold">{node.phase}</span>
+                    <div className="px-4 py-2 bg-purple-600/20 border border-purple-400/40 rounded-full">
+                      <span className="text-purple-300 text-xs font-semibold">{node.phase}</span>
                     </div>
-                    <div className="text-green-400 opacity-60 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="text-purple-400 opacity-60 group-hover:opacity-100 transition-opacity duration-300">
                       {node.icon}
                     </div>
                   </div>
 
                   {/* Title */}
-                  <h3 className="text-xl font-bold text-white mb-2">{node.title}</h3>
-                  <div className="text-green-300 text-sm font-medium mb-4 opacity-80">{node.subtitle}</div>
+                  <h3 className="text-2xl font-bold text-white mb-3">{node.title}</h3>
+                  <div className="text-purple-300 text-sm font-medium mb-6 opacity-80">{node.subtitle}</div>
                   
                   {/* Description */}
-                  <p className="text-gray-300 text-sm leading-relaxed mb-6">{node.description}</p>
+                  <p className="text-gray-300 text-sm leading-relaxed mb-8">{node.description}</p>
                   
                   {/* Metrics */}
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {node.metrics.map((metric, idx) => (
                       <div key={idx} className="flex items-center text-xs text-gray-400">
-                        <div className="w-1.5 h-1.5 bg-green-400 rounded-full mr-2 opacity-60"></div>
+                        <div className="w-2 h-2 bg-purple-400 rounded-full mr-3 opacity-60"></div>
                         {metric}
                       </div>
                     ))}
                   </div>
 
                   {/* Progress Indicator */}
-                  <div className="mt-6 pt-4 border-t border-green-500/10">
+                  <div className="mt-8 pt-6 border-t border-purple-500/20">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-gray-500">Processing Stage</span>
-                      <span className="text-green-400 font-mono">{String(index + 1).padStart(2, '0')}/03</span>
+                      <span className="text-purple-400 font-medium">{String(index + 1).padStart(2, '0')}/03</span>
                     </div>
-                    <div className="mt-2 h-1 bg-gray-700 rounded-full overflow-hidden">
+                    <div className="mt-3 h-2 bg-gray-800 rounded-full overflow-hidden">
                       <div 
-                        className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full transition-all duration-1000 ease-out"
+                        className="h-full bg-gradient-to-r from-purple-600 to-purple-400 rounded-full transition-all duration-1000 ease-out"
                         style={{width: `${((index + 1) / 3) * 100}%`}}
                       ></div>
                     </div>
@@ -330,16 +321,16 @@ const AgentCreationPage = () => {
         {/* Advanced CTA Section */}
         <div className="text-center">
           {/* Technical Specs */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12 text-center">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-16 text-center">
             {[
               { label: "Response Time", value: "<50ms" },
               { label: "Accuracy Rate", value: "99.7%" },
               { label: "Neural Paths", value: "10M+" },
               { label: "Uptime SLA", value: "99.9%" }
             ].map((spec, index) => (
-              <div key={index} className="bg-gray-900/30 backdrop-blur-sm border border-green-500/20 rounded-lg p-4">
-                <div className="text-green-400 text-lg font-bold font-mono">{spec.value}</div>
-                <div className="text-gray-500 text-xs">{spec.label}</div>
+              <div key={index} className="bg-gray-900/50 backdrop-blur-sm border border-purple-500/30 rounded-xl p-6">
+                <div className="text-purple-400 text-2xl font-bold">{spec.value}</div>
+                <div className="text-gray-400 text-sm mt-2">{spec.label}</div>
               </div>
             ))}
           </div>
@@ -354,13 +345,13 @@ const AgentCreationPage = () => {
             onClick={closeModal}
           ></div>
           
-          <div className="relative bg-gray-900 border border-green-500/50 rounded-lg shadow-2xl shadow-green-400/20 w-full max-w-md max-h-[90vh] overflow-y-auto animate-in fade-in-0 zoom-in-95 duration-300">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-green-400">Neural Configuration</h2>
+          <div className="relative bg-gray-900/90 border border-purple-500/50 rounded-2xl shadow-2xl shadow-purple-600/20 w-full max-w-lg max-h-[90vh] overflow-y-auto backdrop-blur-sm">
+            <div className="p-8">
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-3xl font-bold text-purple-400">Neural Configuration</h2>
                 <button
                   onClick={closeModal}
-                  className="text-gray-400 hover:text-green-400 text-2xl transition-colors duration-200"
+                  className="text-gray-400 hover:text-purple-400 text-3xl transition-colors duration-200"
                 >
                   ×
                 </button>
@@ -368,16 +359,16 @@ const AgentCreationPage = () => {
 
               {/* Error Message */}
               {error && (
-                <div className="mb-4 p-3 bg-red-900/50 border border-red-500/50 rounded-lg text-red-300 text-sm">
+                <div className="mb-6 p-4 bg-red-900/50 border border-red-500/50 rounded-xl text-red-300 text-sm">
                   {error}
                 </div>
               )}
 
-              <form onSubmit={handleCreateAgent} className="space-y-6">
+              <form onSubmit={handleCreateAgent} className="space-y-8">
                 {/* Agent Identity */}
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-gray-300 mb-3">
                       Agent Designation *
                     </label>
                     <input
@@ -385,14 +376,14 @@ const AgentCreationPage = () => {
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 bg-black border border-green-500/50 rounded-lg text-white placeholder-gray-500 focus:border-green-400 focus:ring-2 focus:ring-green-400/20 focus:outline-none transition-all duration-200"
+                      className="w-full px-4 py-4 bg-black/50 border border-purple-500/50 rounded-xl text-white placeholder-gray-500 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 focus:outline-none transition-all duration-200"
                       placeholder="Enter agent designation"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-gray-300 mb-3">
                       Core Function & Purpose *
                     </label>
                     <textarea
@@ -400,7 +391,7 @@ const AgentCreationPage = () => {
                       value={formData.description}
                       onChange={handleInputChange}
                       rows={4}
-                      className="w-full px-4 py-3 bg-black border border-green-500/50 rounded-lg text-white placeholder-gray-500 focus:border-green-400 focus:ring-2 focus:ring-green-400/20 focus:outline-none transition-all duration-200 resize-none"
+                      className="w-full px-4 py-4 bg-black/50 border border-purple-500/50 rounded-xl text-white placeholder-gray-500 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 focus:outline-none transition-all duration-200 resize-none"
                       placeholder="Define the agent's primary function, role, and operational scope..."
                       required
                     />
@@ -408,18 +399,18 @@ const AgentCreationPage = () => {
                 </div>
 
                 {/* Behavioral Parameters */}
-                <div className="space-y-4">
-                  <div className="text-sm font-medium text-green-300 uppercase tracking-wide">Behavioral Parameters</div>
+                <div className="space-y-6">
+                  <div className="text-sm font-medium text-purple-300 uppercase tracking-wide">Behavioral Parameters</div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-gray-300 mb-3">
                       Communication Protocol
                     </label>
                     <select
                       name="personality"
                       value={formData.personality}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 bg-black border border-green-500/50 rounded-lg text-white focus:border-green-400 focus:ring-2 focus:ring-green-400/20 focus:outline-none transition-all duration-200"
+                      className="w-full px-4 py-4 bg-black/50 border border-purple-500/50 rounded-xl text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 focus:outline-none transition-all duration-200"
                     >
                       {personalityOptions.map(option => (
                         <option key={option.value} value={option.value} className="bg-black">
@@ -430,14 +421,14 @@ const AgentCreationPage = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-gray-300 mb-3">
                       Response Architecture
                     </label>
                     <select
                       name="responseStyle"
                       value={formData.responseStyle}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 bg-black border border-green-500/50 rounded-lg text-white focus:border-green-400 focus:ring-2 focus:ring-green-400/20 focus:outline-none transition-all duration-200"
+                      className="w-full px-4 py-4 bg-black/50 border border-purple-500/50 rounded-xl text-white focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 focus:outline-none transition-all duration-200"
                     >
                       {responseStyleOptions.map(option => (
                         <option key={option.value} value={option.value} className="bg-black">
@@ -449,39 +440,39 @@ const AgentCreationPage = () => {
                 </div>
 
                 {/* Preview of selected capabilities */}
-                <div className="p-4 bg-green-400/5 border border-green-500/20 rounded-lg">
-                  <div className="text-sm font-medium text-green-300 mb-2">Generated Capabilities:</div>
-                  <div className="flex flex-wrap gap-2">
+                <div className="p-6 bg-purple-600/10 border border-purple-500/30 rounded-xl">
+                  <div className="text-sm font-medium text-purple-300 mb-4">Generated Capabilities:</div>
+                  <div className="flex flex-wrap gap-3">
                     {getCapabilities(formData.personality, formData.responseStyle).map((capability, index) => (
-                      <span key={index} className="px-2 py-1 bg-green-400/10 text-green-300 text-xs rounded-full">
+                      <span key={index} className="px-3 py-2 bg-purple-600/20 text-purple-300 text-xs rounded-full border border-purple-500/30">
                         {capability}
                       </span>
                     ))}
                   </div>
                 </div>
 
-                <div className="pt-6 border-t border-green-500/20">
+                <div className="pt-8 border-t border-purple-500/30">
                   <button
                     type="submit"
                     disabled={!formData.name || !formData.description || isLoading}
-                    className="w-full px-6 py-4 bg-green-400 text-black font-semibold rounded-lg hover:bg-green-300 transition-all duration-300 hover:shadow-lg hover:shadow-green-400/30 focus:outline-none focus:ring-4 focus:ring-green-400/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    className="w-full px-8 py-5 bg-purple-600 text-white font-semibold rounded-xl hover:bg-purple-500 transition-all duration-300 hover:shadow-xl hover:shadow-purple-600/30 focus:outline-none focus:ring-4 focus:ring-purple-400/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-lg"
                   >
                     {isLoading ? (
                       <>
-                        <div className="w-5 h-5 mr-2 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
-                        DEPLOYING...
+                        <div className="w-6 h-6 mr-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Deploying...
                       </>
                     ) : (
                       <>
-                        <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <svg className="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
                         </svg>
-                        DEPLOY NEURAL AGENT
+                        Deploy Neural Agent
                       </>
                     )}
                   </button>
                   
-                  <div className="mt-4 text-center">
+                  <div className="mt-6 text-center">
                     <div className="text-xs text-gray-500">
                       Agent will be initialized with enterprise-grade security protocols
                     </div>
@@ -491,7 +482,69 @@ const AgentCreationPage = () => {
             </div>
           </div>
         </div>
-      )} 
+      )}
+
+      {/* CSS for starfield */}
+      <style jsx>{`
+        /* Starfield CSS */
+        .starfield::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-image: 
+            radial-gradient(2px 2px at 20px 30px, #fff, transparent),
+            radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
+            radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+            radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.6), transparent),
+            radial-gradient(2px 2px at 160px 30px, #fff, transparent),
+            radial-gradient(1px 1px at 200px 90px, rgba(255,255,255,0.7), transparent),
+            radial-gradient(2px 2px at 240px 50px, #fff, transparent),
+            radial-gradient(1px 1px at 280px 120px, rgba(255,255,255,0.8), transparent),
+            radial-gradient(1px 1px at 320px 20px, #fff, transparent),
+            radial-gradient(2px 2px at 360px 100px, rgba(255,255,255,0.6), transparent),
+            radial-gradient(1px 1px at 400px 60px, #fff, transparent),
+            radial-gradient(2px 2px at 440px 140px, rgba(255,255,255,0.9), transparent),
+            radial-gradient(1px 1px at 480px 80px, #fff, transparent),
+            radial-gradient(2px 2px at 520px 30px, rgba(255,255,255,0.7), transparent),
+            radial-gradient(1px 1px at 560px 110px, #fff, transparent),
+            radial-gradient(2px 2px at 600px 70px, rgba(255,255,255,0.8), transparent);
+          background-repeat: repeat;
+          background-size: 640px 160px;
+          animation: twinkle 0.8s infinite alternate;
+        }
+
+        .starfield::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-image: 
+            radial-gradient(3px 3px at 30px 50px, #a855f7, transparent),
+            radial-gradient(2px 2px at 80px 100px, rgba(168,85,247,0.6), transparent),
+            radial-gradient(3px 3px at 150px 25px, #a855f7, transparent),
+            radial-gradient(2px 2px at 220px 90px, rgba(168,85,247,0.8), transparent),
+            radial-gradient(3px 3px at 290px 140px, #a855f7, transparent),
+            radial-gradient(2px 2px at 350px 40px, rgba(168,85,247,0.7), transparent),
+            radial-gradient(3px 3px at 420px 110px, #a855f7, transparent),
+            radial-gradient(2px 2px at 480px 20px, rgba(168,85,247,0.9), transparent),
+            radial-gradient(3px 3px at 540px 80px, #a855f7, transparent),
+            radial-gradient(2px 2px at 600px 130px, rgba(168,85,247,0.6), transparent);
+          background-repeat: repeat;
+          background-size: 640px 160px;
+          animation: twinkle 1.2s infinite alternate;
+          animation-delay: 0.4s;
+        }
+
+        @keyframes twinkle {
+          0% { opacity: 0.2; }
+          100% { opacity: 1; }
+        }
+      `}</style> 
     </div>
   );
 };

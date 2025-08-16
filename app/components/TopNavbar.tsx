@@ -289,7 +289,7 @@ const TopNavbar = () => {
 
   return (
     <header 
-      className="w-full h-[9%] border-b border-white/10 px-6 flex items-center justify-between sticky top-0 z-50 transition-all duration-500 backdrop-blur-sm bg-black/60"
+      className="w-full h-[9%] border-b border-purple-800/50 px-6 flex items-center justify-between sticky top-0 z-50 transition-all duration-500 backdrop-blur-sm bg-black/60"
       onMouseEnter={() => setIsNavHovered(true)}
       onMouseLeave={() => setIsNavHovered(false)}
       style={{
@@ -323,7 +323,7 @@ const TopNavbar = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={handleSearch}
-            className="w-full pl-10 pr-4 py-2.5 bg-black/40 border border-white/10 rounded-lg focus:ring-2 focus:ring-[#4cc9ff]/50 focus:border-[#4cc9ff]/50 outline-none transition-all text-white text-sm placeholder-white/40 backdrop-blur-sm hover:border-[#00fff0]/30"
+            className="w-full pl-10 pr-4 py-2.5 bg-black/40 border border-white/40 border-b-[2px] rounded-lg focus:ring-2 focus:ring-[#4cc9ff]/50 focus:border-[#4cc9ff]/50 outline-none transition-all text-white text-sm placeholder-white/40 backdrop-blur-sm hover:border-[#00fff0]/30"
           />
         </div>
       </div>

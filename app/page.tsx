@@ -31,6 +31,36 @@ const cardData = [
   { Icon: Music, title: "Code Generation", description: "234 Agents" }
 ];
 
+const featuredAgentsData = [
+  {
+    url: "/agent/codeGen",
+    img: img,
+    title: "Lana codes",
+    description: "autonomous code generator that builds dapp",
+    price: "2.5 ZLAG",
+    owner: "by TeamZ",
+    agentId: 0,
+  },
+  {
+    url: "/agent/trading",
+    img: img2,
+    title: "QuickieTrader",
+    description: "autonomous ai assistant that helps you trade",
+    price: "2.5 ZLAG",
+    owner: "by TeamZ",
+    agentId: 0,
+  },
+  {
+    url: "/agent/pushit",
+    img: img1,
+    title: "PushIt",
+    description: "autonomous github ai agent that works 24/7",
+    price: "2.5 ZLAG",
+    owner: "by TeamZ",
+    agentId: 0,
+  }
+];
+
 
 export default function Home() {
   return (
@@ -97,12 +127,20 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="w-full h-[50vh] flex gap-7 items-start pt-5  ">
-          <AiAgentsCard url={"/agent/codeGen"} img={img}  title={"Lana codes"} description={"autonomous code generator that builds dapp"} price={"2.5 ZLAG"} owner={"by TeamZ"}/>
-          <AiAgentsCard url={"/agent/trading"} img={img2}  title={"QuickieTrader"} description={"autonomous ai assistant that helps you trade"} price={"2.5 ZLAG"} owner={"by TeamZ"}/>
-          <AiAgentsCard url={"/agent/pushit"} img={img1}  title={"PushIt"} description={"autonomous github ai agent that works 24/7"} price={"2.5 ZLAG"} owner={"by TeamZ"}/>
-
-        </div>
+<div className="w-full h-[50vh] flex gap-7 items-start pt-5">
+  {featuredAgentsData.map((agent) => (
+    <AiAgentsCard
+      key={agent.title}
+      url={agent.url}
+      img={agent.img}
+      title={agent.title}
+      description={agent.description}
+      price={agent.price}
+      owner={agent.owner}
+      agentId={agent.agentId}
+    />
+  ))}
+</div>
 
       </div>
 
