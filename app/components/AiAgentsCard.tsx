@@ -1,26 +1,143 @@
-import Image from 'next/image'
-import React, { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { X, Wallet, CheckCircle } from 'lucide-react'
+'use client'; // Required for hooks
+
+import Image from 'next/image';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { X, Wallet, CheckCircle } from 'lucide-react';
+import { ethers } from 'ethers';
+import { useWriteContract, useWaitForTransactionReceipt, useAccount } from 'wagmi';
+
+// --- STEP 1: IMPORT YOUR CONTRACT INFO ---
+import AgentPlatformABI from '../contracts/AgentPlatform.json';
+import ERC20ABI from '../contracts/erc20_abi.json';
+import { agentPlatformAddress, yourTokenAddress } from '../contracts/addresses';
+
 // @ts-ignore
-const AiAgentsCard = ({img, title, description, price, owner, url}) => {
+// const AiAgentsCard = ({img, title, description, price, owner, url, agentId}) => {
+//   const [showPaymentModal, setShowPaymentModal] = useState(false);
+//   const [paymentStep, setPaymentStep] = useState('payment'); // 'payment' or 'success'
+//   const [isProcessing, setIsProcessing] = useState(false);
+//   const router = useRouter();
+//   const { isConnected } = useAccount(); // <-- Add this line
+
+
+//   const handleBuyClick = () => {
+//     setShowPaymentModal(true);
+//     setPaymentStep('payment');
+//   };
+
+//   const handlePayment = async () => {
+//     setIsProcessing(true);
+//     // Simulate payment processing
+//     setTimeout(() => {
+//       setIsProcessing(false);
+//       setPaymentStep('success');
+//     }, 2000);
+//   };
+
+//   const handleDeploy = () => {
+//     setShowPaymentModal(false);
+//     router.push(url);
+//   };
+
+//   const closeModal = () => {
+//     setShowPaymentModal(false);
+//     setPaymentStep('payment');
+//     setIsProcessing(false);
+//   };
+
+interface AiAgentsCardProps {
+  img: any;
+  title: string;
+  description: string;
+  price: string;
+  owner: string;
+  url: string;
+  agentId: number;
+}
+
+const AiAgentsCard: React.FC<AiAgentsCardProps> = ({ img, title, description, price, owner, url, agentId }) => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [paymentStep, setPaymentStep] = useState('payment'); // 'payment' or 'success'
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentStep, setPaymentStep] = useState('payment');
   const router = useRouter();
+
+  const { isConnected } = useAccount();
+
+  // --- WAGMI HOOKS FOR THE TWO-STEP TRANSACTION ---
+  const { data: approveHash, writeContractAsync: approveTokens, isPending: isApproving, reset: resetApprove } = useWriteContract();
+  const { data: rentHash, writeContractAsync: rentAgent, isPending: isRenting, reset: resetRent } = useWriteContract();
+
+  // Hook to watch for the APPROVAL transaction to be confirmed
+  const { isSuccess: isApprovalConfirmed } = useWaitForTransactionReceipt({
+    hash: approveHash,
+  });
+  
+  // Hook to watch for the final RENT transaction to be confirmed
+  const { isSuccess: isRentConfirmed, isLoading: isConfirmingRent } = useWaitForTransactionReceipt({
+    hash: rentHash,
+  });
+
+  // This variable combines all loading states for the UI
+  const isProcessing = isApproving || isRenting || isConfirmingRent;
+
+  // This `useEffect` triggers the second transaction (rentAgent) AFTER the first one (approve) is confirmed.
+  useEffect(() => {
+    if (isApprovalConfirmed) {
+      console.log("✅ Approval confirmed! Now calling rentAgent...");
+      const numericPrice = price.split(' ')[0];
+      const amountInWei = ethers.parseUnits(numericPrice, 18);
+
+      // Call the rentAgent function now that approval is granted
+      rentAgent({
+        address: agentPlatformAddress,
+        abi: AgentPlatformABI.abi,
+        functionName: 'rentAgent',
+        args: [agentId, amountInWei],
+      }).catch(err => {
+        console.error("❌ Rent agent call failed after approval", err);
+      });
+    }
+  }, [isApprovalConfirmed, rentAgent, agentId, price]);
+  
+  // This `useEffect` updates the UI to the "success" step once the final transaction is confirmed.
+  useEffect(() => {
+    if (isRentConfirmed) {
+      setPaymentStep('success');
+    }
+  }, [isRentConfirmed]);
 
   const handleBuyClick = () => {
     setShowPaymentModal(true);
     setPaymentStep('payment');
   };
 
+  // This is the function that starts the entire payment process.
   const handlePayment = async () => {
-    setIsProcessing(true);
-    // Simulate payment processing
-    setTimeout(() => {
-      setIsProcessing(false);
-      setPaymentStep('success');
-    }, 2000);
+    if (!isConnected) {
+      alert("Please connect your wallet first!");
+      return;
+    }
+
+    // Reset previous transaction states before starting a new one
+    resetApprove();
+    resetRent();
+    
+    const numericPrice = price.split(' ')[0];
+    const amountInWei = ethers.parseUnits(numericPrice, 18);
+
+    try {
+      console.log("1️⃣ Requesting token approval...");
+      // This only starts the FIRST step (approve)
+      await approveTokens({
+        address: yourTokenAddress,
+        abi: ERC20ABI,
+        functionName: 'approve',
+        args: [agentPlatformAddress, amountInWei],
+      });
+      console.log("⏳ Approval transaction sent, waiting for confirmation...");
+    } catch (error) {
+      console.error("❌ Approval transaction failed to send:", error);
+    }
   };
 
   const handleDeploy = () => {
@@ -29,14 +146,17 @@ const AiAgentsCard = ({img, title, description, price, owner, url}) => {
   };
 
   const closeModal = () => {
-    setShowPaymentModal(false);
-    setPaymentStep('payment');
-    setIsProcessing(false);
+    // Don't let the user close the modal while a transaction is processing
+    if (!isProcessing) {
+      setShowPaymentModal(false);
+    }
   };
+
 
   return (
     <>
-      <div className="w-[25%] h-[95%] relative group cursor-pointer">
+      <div className="w-[25%] h-[95%] relative group cursor-pointer"
+      onClick={handleBuyClick}>
         {/* Main card with cyberpunk shape - clipped corners */}
         <div 
           className="w-full h-full relative overflow-hidden transition-all duration-500 hover:scale-[1.02] hover:rotate-1"
@@ -105,7 +225,7 @@ const AiAgentsCard = ({img, title, description, price, owner, url}) => {
                 </div>
                 
                 <button 
-                  onClick={handleBuyClick}
+                  onClick={(e) => { e.stopPropagation(); handleBuyClick(); }}
                   className="relative px-4 py-2 bg-gradient-to-r from-[#4cc9ff] to-[#00fff0] hover:from-[#4cc9ff]/80 hover:to-[#00fff0]/80 transition-all duration-300 font-semibold uppercase tracking-wider text-sm transform hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(76,201,255,0.4)] hover:shadow-[0_0_30px_rgba(76,201,255,0.6)] backdrop-blur-sm"
                   style={{
                     clipPath: 'polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))'
@@ -266,7 +386,7 @@ const AiAgentsCard = ({img, title, description, price, owner, url}) => {
                   {/* Pay Button */}
                   <button
                     onClick={handlePayment}
-                    disabled={isProcessing}
+                    disabled={isProcessing || !isConnected}
                     className="w-full py-3 bg-gradient-to-r from-[#4cc9ff] to-[#00fff0] hover:from-[#4cc9ff]/80 hover:to-[#00fff0]/80 disabled:opacity-50 text-white font-bold rounded-lg transition-all duration-300 shadow-[0_0_20px_rgba(76,201,255,0.4)] hover:shadow-[0_0_30px_rgba(76,201,255,0.6)]"
                   >
                     {isProcessing ? (
@@ -274,8 +394,10 @@ const AiAgentsCard = ({img, title, description, price, owner, url}) => {
                         <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
                         <span>Processing...</span>
                       </div>
-                    ) : (
+                    ) : isConnected ? (
                       `Pay ${price} with Crypto`
+                      ) : (
+                      'Please Connect Wallet'
                     )}
                   </button>
                 </>

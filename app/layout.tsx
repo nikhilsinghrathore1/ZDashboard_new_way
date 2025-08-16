@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./Providers"; // <-- IMPORT IT
+import ClientLayout from "./components/ClientLayout"; // <-- IMPORT YOUR NEW COMPONENT
 import SideNavbar from "./components/SideNavbar";
 import TopNavbar from "./components/TopNavbar";
 
@@ -30,18 +31,8 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased `}
       >
-        {/* The Provider component must wrap your entire layout */}
-        <Providers> {/* <-- WRAP EVERYTHING HERE */}
-          <div className="w-full h-screen overflow-hidden bg-[#020817] flex">
-            <SideNavbar />
-
-            <div className="w-[83.35%] h-full relative overflow-y-auto ">
-              <TopNavbar />
-                      
-              {children}
-            </div>
-          </div>
-        </Providers> {/* <-- END WRAPPER HERE */}
+       {/* Use the new ClientLayout to wrap the children */}
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );

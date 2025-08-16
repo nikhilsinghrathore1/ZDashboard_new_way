@@ -7,6 +7,8 @@ import { injected, metaMask, safe, walletConnect } from 'wagmi/connectors'
 // 1. Get a WalletConnect Project ID
 // Go to https://cloud.walletconnect.com/ and create a project to get a project ID.
 const projectId = '81bd965ef6722331a6c12ed6611a18a4' // <-- PASTE YOURS HERE
+const alchemyAmoyRpcUrl = 'https://polygon-amoy.g.alchemy.com/v2/MK9bHqOG9dtRpYA4qM4Gk';
+
 
 // 2. Create wagmi config
 export const config = createConfig({
@@ -23,7 +25,7 @@ export const config = createConfig({
     [mainnet.id]: http(),
     [polygon.id]: http(),
     [sepolia.id]: http(),
-    [polygonAmoy.id]: http(),
+    [polygonAmoy.id]: http(alchemyAmoyRpcUrl),
 
   },
 })

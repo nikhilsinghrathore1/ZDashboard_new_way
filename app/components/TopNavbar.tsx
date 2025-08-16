@@ -55,12 +55,12 @@ const TopNavbar = () => {
     chainId: chain?.id,
   });
 
-  // --- ADD THESE CONSOLE LOGS ---
-  console.log('--- ZLAG Token Debug ---');
-  console.log('Chain:', chain);
-  console.log('Symbol:', { data: zlagSymbol, isLoading: isSymbolLoading, isError: isSymbolError, error: symbolError });
-  console.log('Decimals:', { data: zlagDecimals, isLoading: isDecimalsLoading, isError: isDecimalsError, error: decimalsError });
-  console.log('Balance:', { data: zlagBalanceData, isLoading: isBalanceLoading, isError: isBalanceError, error: balanceError });
+  // // --- ADD THESE CONSOLE LOGS ---
+  // console.log('--- ZLAG Token Debug ---');
+  // console.log('Chain:', chain);
+  // console.log('Symbol:', { data: zlagSymbol, isLoading: isSymbolLoading, isError: isSymbolError, error: symbolError });
+  // console.log('Decimals:', { data: zlagDecimals, isLoading: isDecimalsLoading, isError: isDecimalsError, error: decimalsError });
+  // console.log('Balance:', { data: zlagBalanceData, isLoading: isBalanceLoading, isError: isBalanceError, error: balanceError });
 
 
 // --- NEW: Added the missing logic to format your balance ---

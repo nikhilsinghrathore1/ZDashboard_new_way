@@ -1,6 +1,8 @@
 "use client"
 import React, { useState, useEffect } from 'react'
 import { Search, Star, Users, Download, TrendingUp, Bot, Code, MessageSquare, Image, Music, Brain, Heart, User, Crown, GitBranch, DollarSign, Zap } from 'lucide-react'
+import AiAgentsCard from '../components/AiAgentsCard'; // Assuming it's in a components folder
+
 
 const MarketplacePage = () => {
   const [searchTerm, setSearchTerm] = useState('')
@@ -15,7 +17,7 @@ const MarketplacePage = () => {
       id: 'lana_codes',
       name: "Lana Codes",
       description: "An autonomous dapp builder that creates decentralized applications automatically",
-      price: "$29.99/mo",
+      price: "150 Zlag",
       rating: 4.9,
       users: "2.1k",
       downloads: "8.5k",
@@ -27,13 +29,15 @@ const MarketplacePage = () => {
       owned: false,
       createdByUser: false,
       liked: true,
-      redirectUrl: "/agent/codeGen"
+      redirectUrl: "/agent/codeGen",
+      agentId: 0, // <-- ADD THIS LINE
+
     },
     {
       id: 'pushit',
       name: "PushIt",
       description: "Converts your git push into comprehensive documentation automatically",
-      price: "$12.99/mo",
+      price: "50 Zlag",
       rating: 4.7,
       users: "5.4k",
       downloads: "15.2k",
@@ -45,13 +49,14 @@ const MarketplacePage = () => {
       owned: false,
       createdByUser: false,
       liked: false,
-      redirectUrl: "/agent/pushit"
+      redirectUrl: "/agent/pushit",
+      agentId: 0, // <-- ADD THIS LINE
     },
     {
       id: 'quicktrader',
       name: "QuickerTrader",
       description: "Your everyday trading helper with real-time market analysis and insights",
-      price: "$24.99/mo",
+      price: "50 Zlag",
       rating: 4.8,
       users: "7.8k",
       downloads: "22.3k",
@@ -63,7 +68,8 @@ const MarketplacePage = () => {
       owned: true,
       createdByUser: false,
       liked: true,
-      redirectUrl: "/agent/trading"
+      redirectUrl: "/agent/trading",
+      agentId: 0, // <-- ADD THIS LINE
     }
   ]
 
