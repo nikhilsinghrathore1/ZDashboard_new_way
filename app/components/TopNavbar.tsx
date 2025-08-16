@@ -1,6 +1,24 @@
-"use client"
+"use client";
 import React, { useState } from "react";
 import { Search, Bell, Wallet, ChevronDown, LogOut, User, Settings, HelpCircle } from "lucide-react";
+
+// --- Imports are corrected here ---
+import { useAccount, useConnect, useDisconnect, useBalance, useReadContract } from "wagmi";
+import { injected } from "wagmi/connectors";
+import { formatUnits } from "viem";
+
+// --- Your Token ABI and Address (This is correct) ---
+const zlagTokenAbi = [
+  { "constant": true, "inputs": [{"name": "_owner", "type": "address"}], "name": "balanceOf", "outputs": [{"name": "balance", "type": "uint256"}], "type": "function" },
+  { "constant": true, "inputs": [], "name": "decimals", "outputs": [{"name": "", "type": "uint8"}], "type": "function" },
+  { "constant": true, "inputs": [], "name": "symbol", "outputs": [{"name": "", "type": "string"}], "type": "function" }
+];
+
+const zlagTokenContract = {
+  address: '0xea4808283eFC9140BBea9E5465AEAF102DDA1b85',
+  abi: zlagTokenAbi,
+} as const;
+
 
 const TopNavbar = () => {
   const [showNotifications, setShowNotifications] = useState(false);
@@ -8,39 +26,57 @@ const TopNavbar = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isNavHovered, setIsNavHovered] = useState(false);
   
-  // Mock wallet connection state
-  const [isConnected, setIsConnected] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
+  const { address, isConnected, isConnecting, chain } = useAccount();
+  const { connect } = useConnect();
+  const { disconnect } = useDisconnect();
   
-  // Mock account data
-  const account = "0x1234...5678";
-  const balance = "1.25";
-  const alxBalance = "150.5";
+  const { data: balanceData } = useBalance({ address });
 
+  // --- Your hooks to read contract data (This is correct) ---
+  // --- MODIFIED SECTION FOR DEBUGGING ---
+
+  const { data: zlagBalanceData, isLoading: isBalanceLoading, isError: isBalanceError, error: balanceError } = useReadContract({
+    ...zlagTokenContract,
+    functionName: 'balanceOf',
+    args: [address!],
+    chainId: chain?.id,
+    query: { enabled: isConnected },
+  });
+
+  const { data: zlagDecimals, isLoading: isDecimalsLoading, isError: isDecimalsError, error: decimalsError } = useReadContract({
+    ...zlagTokenContract,
+    functionName: 'decimals',
+    chainId: chain?.id,
+  });
+
+  const { data: zlagSymbol, isLoading: isSymbolLoading, isError: isSymbolError, error: symbolError } = useReadContract({
+    ...zlagTokenContract,
+    functionName: 'symbol',
+    chainId: chain?.id,
+  });
+
+  // // --- ADD THESE CONSOLE LOGS ---
+  // console.log('--- ZLAG Token Debug ---');
+  // console.log('Chain:', chain);
+  // console.log('Symbol:', { data: zlagSymbol, isLoading: isSymbolLoading, isError: isSymbolError, error: symbolError });
+  // console.log('Decimals:', { data: zlagDecimals, isLoading: isDecimalsLoading, isError: isDecimalsError, error: decimalsError });
+  // console.log('Balance:', { data: zlagBalanceData, isLoading: isBalanceLoading, isError: isBalanceError, error: balanceError });
+
+
+// --- NEW: Added the missing logic to format your balance ---
+  const formattedZlagBalance =
+    typeof zlagBalanceData === 'bigint' && typeof zlagDecimals === 'number'
+      ? formatUnits(zlagBalanceData, zlagDecimals)
+      : '0';
+
+// --- Your existing notifications and search handler ---
   const notifications = [
     { id: 1, message: "New transaction confirmed", time: "2 min ago", unread: true },
     { id: 2, message: "Wallet connected successfully", time: "1 hour ago", unread: true },
-    { id: 3, message: "Price alert: ETH above $2,500", time: "3 hours ago", unread: false },
-    { id: 4, message: "Weekly portfolio summary ready", time: "1 day ago", unread: false },
-    { id: 5, message: "New DeFi opportunity available", time: "2 days ago", unread: false }
   ];
-
   const unreadCount = notifications.filter(n => n.unread).length;
 
-  const handleConnect = () => {
-    setIsConnecting(true);
-    setTimeout(() => {
-      setIsConnected(true);
-      setIsConnecting(false);
-    }, 2000);
-  };
-
-  const handleDisconnect = () => {
-    setIsConnected(false);
-    setShowUserMenu(false);
-  };
-
-  const handleSearch = (e:any) => {
+  const handleSearch = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && searchQuery.trim()) {
       console.log("Searching for:", searchQuery);
     }
@@ -48,7 +84,7 @@ const TopNavbar = () => {
 
   return (
     <header 
-      className={`w-full h-[9%] border-b border-green-500/30 px-6 flex items-center justify-between sticky top-0 z-50 transition-all duration-500   ${
+      className={`w-full h-[9%] border-b border-green-500/30 px-6 flex items-center justify-between sticky top-0 z-50 transition-all duration-500 relative ${
         isNavHovered 
           ? 'bg-gradient-to-r from-green-800/90 via-green-700/85 to-emerald-800/90 backdrop-blur-lg shadow-lg shadow-green-400/30' 
           : 'bg-black/60 backdrop-blur-sm'
@@ -108,7 +144,7 @@ const TopNavbar = () => {
 
           {/* Notifications Dropdown */}
           {showNotifications && (
-            <div className="absolute z-[100] right-0 top-12 w-80 bg-gray-900/95 border border-gray-700 rounded-lg shadow-xl  backdrop-blur-md">
+            <div className="absolute right-0 top-12 w-80 bg-gray-900/95 border border-gray-700 rounded-lg shadow-xl z-50 backdrop-blur-md">
               <div className="p-4 border-b border-gray-700">
                 <h3 className="font-semibold text-white">Notifications</h3>
               </div>
@@ -144,15 +180,17 @@ const TopNavbar = () => {
         </div>
 
         {/* Wallet Connection */}
-        {isConnected ? (
+        {isConnected && address ? (
           <div className="flex items-center space-x-3">
             {/* Balances */}
             <div className="hidden md:flex items-center space-x-2">
               <span className="bg-blue-500/10 text-blue-400 px-2 py-1 rounded text-xs font-medium border border-blue-500/30">
-                {balance} MATIC
+                 {/* Use real balance data, format to 4 decimal places */}
+                {balanceData ? `${parseFloat(balanceData.formatted).toFixed(4)} ${balanceData.symbol}` : "Loading..."}
               </span>
+              {/* --- NEW: This is the updated display for your ZLAG token --- */}
               <span className="bg-green-500/10 text-green-400 px-2 py-1 rounded text-xs font-medium border border-green-500/30">
-                {alxBalance} ALX
+                {zlagSymbol ? `${parseFloat(formattedZlagBalance).toFixed(4)} ${zlagSymbol}` : "Loading..."}
               </span>
             </div>
 
@@ -163,11 +201,13 @@ const TopNavbar = () => {
                 className="flex items-center space-x-2 px-3 py-2 text-white hover:bg-gray-800/50 rounded-lg transition-colors"
               >
                 <div className="h-8 w-8 bg-green-500 rounded-full flex items-center justify-center text-black font-bold text-sm">
-                  {account.slice(2, 4).toUpperCase()}
+                  {/* Use real address */}
+                  {address.slice(2, 4).toUpperCase()}
                 </div>
                 <div className="hidden md:block text-left">
                   <div className="text-sm font-medium">
-                    {account.slice(0, 6)}...{account.slice(-4)}
+                    {/* Use real address */}
+                    {`${address.slice(0, 6)}...${address.slice(-4)}`}
                   </div>
                   <div className="text-xs text-gray-400">Connected</div>
                 </div>
@@ -195,8 +235,8 @@ const TopNavbar = () => {
                     </button>
                   </div>
                   <div className="border-t border-gray-700 py-1">
-                    <button 
-                      onClick={handleDisconnect}
+                     <button 
+                      onClick={() => disconnect()} // Use wagmi's disconnect function
                       className="w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-gray-800/50 hover:text-red-300 transition-colors flex items-center"
                     >
                       <LogOut className="mr-2 h-4 w-4" />
@@ -209,7 +249,8 @@ const TopNavbar = () => {
           </div>
         ) : (
           <button 
-            onClick={handleConnect} 
+            // Call wagmi's connect function. We specify the `injected` connector.
+            onClick={() => connect({ connector: injected() })} 
             disabled={isConnecting}
             className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 disabled:opacity-50 text-white px-4 py-2 rounded-lg transition-all font-medium"
           >
