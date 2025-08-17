@@ -1,0 +1,2 @@
+export const agentPlatformAddress = "0x29C6fc568c9d549039Ed16966dD120E36C9C9e79"; // The address from the previous step
+export const yourTokenAddress = "0xea4808283eFC9140BBea9E5465AEAF102DDA1b85"; // The address of your token
