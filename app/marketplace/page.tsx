@@ -1,6 +1,8 @@
 "use client"
 import React, { useState, useEffect } from 'react'
 import { Search, Star, Users, Download, TrendingUp, Bot, Code, MessageSquare, Image, Music, Brain, Heart, User, Crown, GitBranch, DollarSign, Zap } from 'lucide-react'
+import AiAgentsCard from '../components/AiAgentsCard'; // Assuming it's in a components folder
+
 
 const MarketplacePage = () => {
   const [searchTerm, setSearchTerm] = useState('')
@@ -15,7 +17,7 @@ const MarketplacePage = () => {
       id: 'lana_codes',
       name: "Lana Codes",
       description: "An autonomous dapp builder that creates decentralized applications automatically",
-      price: "$29.99/mo",
+      price: "150 Zlag",
       rating: 4.9,
       users: "2.1k",
       downloads: "8.5k",
@@ -27,13 +29,15 @@ const MarketplacePage = () => {
       owned: false,
       createdByUser: false,
       liked: true,
-      redirectUrl: "/agent/codeGen"
+      redirectUrl: "/agent/codeGen",
+      agentId: 0, // <-- ADD THIS LINE
+
     },
     {
       id: 'pushit',
       name: "PushIt",
       description: "Converts your git push into comprehensive documentation automatically",
-      price: "$12.99/mo",
+      price: "50 Zlag",
       rating: 4.7,
       users: "5.4k",
       downloads: "15.2k",
@@ -45,13 +49,14 @@ const MarketplacePage = () => {
       owned: false,
       createdByUser: false,
       liked: false,
-      redirectUrl: "/agent/pushit"
+      redirectUrl: "/agent/pushit",
+      agentId: 0, // <-- ADD THIS LINE
     },
     {
       id: 'quicktrader',
       name: "QuickerTrader",
       description: "Your everyday trading helper with real-time market analysis and insights",
-      price: "$24.99/mo",
+      price: "50 Zlag",
       rating: 4.8,
       users: "7.8k",
       downloads: "22.3k",
@@ -63,7 +68,8 @@ const MarketplacePage = () => {
       owned: true,
       createdByUser: false,
       liked: true,
-      redirectUrl: "/agent/trading"
+      redirectUrl: "/agent/trading",
+      agentId: 0, // <-- ADD THIS LINE
     }
   ]
 
@@ -79,11 +85,11 @@ const MarketplacePage = () => {
 
   // Capability to color mapping
   const getColorForCapabilities = (capabilities) => {
-    if (capabilities.includes('coding') || capabilities.includes('debugging')) return 'bg-purple-500'
-    if (capabilities.includes('content-creation') || capabilities.includes('brainstorming')) return 'bg-purple-600'
-    if (capabilities.includes('data-analysis') || capabilities.includes('research')) return 'bg-purple-400'
+    if (capabilities.includes('coding') || capabilities.includes('debugging')) return 'bg-emerald-500'
+    if (capabilities.includes('content-creation') || capabilities.includes('brainstorming')) return 'bg-purple-500'
+    if (capabilities.includes('data-analysis') || capabilities.includes('research')) return 'bg-blue-500'
     if (capabilities.includes('business-analysis') || capabilities.includes('strategic-planning')) return 'bg-indigo-500'
-    if (capabilities.includes('mentoring') || capabilities.includes('guidance')) return 'bg-violet-500'
+    if (capabilities.includes('mentoring') || capabilities.includes('guidance')) return 'bg-pink-500'
     return 'bg-gray-500'
   }
 
@@ -160,54 +166,28 @@ const MarketplacePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      {/* Starry background */}
-      <div className="fixed inset-0 pointer-events-none">
-        {[...Array(120)].map((_, i) => (
-          <div 
-            key={`star-${i}`}
-            className="absolute rounded-full"
-            style={{
-              width: `${Math.random() * 3 + 0.5}px`,
-              height: `${Math.random() * 3 + 0.5}px`,
-              background: '#ffffff',
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              opacity: Math.random() * 0.6 + 0.2,
-              animation: `starTwinkle ${Math.random() * 3 + 2}s infinite ease-in-out`,
-              animationDelay: `${Math.random() * 2}s`,
-              boxShadow: `0 0 ${Math.random() * 3 + 1}px rgba(255,255,255,0.3)`
-            }}
-          />
-        ))}
-      </div>
-
-      {/* CSS animations */}
-      <style jsx>{`
-        @keyframes starTwinkle {
-          0%, 100% { 
-            opacity: 0.2; 
-            transform: scale(1);
-          }
-          50% { 
-            opacity: 0.8; 
-            transform: scale(1.2);
-          }
-        }
-      `}</style>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white">
+      {/* Enhanced background pattern */}
+      <div className="fixed inset-0 opacity-[0.03]" style={{
+        backgroundImage: `
+          radial-gradient(circle at 25% 25%, rgba(34,197,94,0.15) 0%, transparent 50%),
+          radial-gradient(circle at 75% 75%, rgba(59,130,246,0.15) 0%, transparent 50%),
+          linear-gradient(rgba(34,197,94,0.1) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(34,197,94,0.1) 1px, transparent 1px)
+        `,
+        backgroundSize: '800px 800px, 800px 800px, 40px 40px, 40px 40px'
+      }}></div>
 
       {/* Header */}
-      <div className="relative backdrop-blur-md border-b border-gray-800/30 sticky top-0 z-10" style={{
-        background: 'rgba(0,0,0,0.8)'
-      }}>
+      <div className="relative bg-black/40 backdrop-blur-md border-b border-gray-800/50 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-purple-200 to-purple-300 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-green-200 to-blue-200 bg-clip-text text-transparent">
               AI Marketplace
             </h1>
             {loading && (
-              <div className="flex items-center gap-2 text-purple-400">
-                <div className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
+              <div className="flex items-center gap-2 text-green-400">
+                <div className="w-4 h-4 border-2 border-green-400 border-t-transparent rounded-full animate-spin"></div>
                 <span className="text-sm">Loading agents...</span>
               </div>
             )}
@@ -217,13 +197,13 @@ const MarketplacePage = () => {
           <div className="flex flex-col sm:flex-row gap-4">
             {/* Search */}
             <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-purple-400" size={20} />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-green-400" size={20} />
               <input
                 type="text"
                 placeholder="Search agents by name, description, or capabilities..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-gray-900/60 backdrop-blur-sm border border-gray-700/50 rounded-2xl pl-12 pr-6 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 placeholder-gray-400 transition-all"
+                className="w-full bg-gray-800/60 backdrop-blur-sm border border-gray-700/50 rounded-2xl pl-12 pr-6 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 placeholder-gray-400 transition-all"
               />
             </div>
             
@@ -237,8 +217,8 @@ const MarketplacePage = () => {
                     onClick={() => setSelectedFilter(filter.id)}
                     className={`whitespace-nowrap px-5 py-3 rounded-2xl font-medium transition-all backdrop-blur-sm flex items-center gap-2 ${
                       selectedFilter === filter.id
-                        ? 'bg-gradient-to-r from-purple-500/30 to-purple-600/30 text-white border border-purple-500/50 shadow-lg shadow-purple-500/20'
-                        : 'bg-gray-900/40 text-gray-300 hover:bg-gray-800/50 border border-gray-700/40 hover:border-gray-600/50'
+                        ? 'bg-gradient-to-r from-green-500/30 to-blue-500/30 text-white border border-green-500/50 shadow-lg shadow-green-500/20'
+                        : 'bg-gray-800/40 text-gray-300 hover:bg-gray-700/50 border border-gray-700/40 hover:border-gray-600/50'
                     }`}
                   >
                     <FilterIcon size={16} />
@@ -265,7 +245,7 @@ const MarketplacePage = () => {
           <p className="text-gray-400 text-sm">
             Showing {filteredAgents.length} agents
             {selectedFilter !== 'all' && (
-              <span className="text-purple-400"> • {filters.find(f => f.id === selectedFilter)?.name}</span>
+              <span className="text-green-400"> • {filters.find(f => f.id === selectedFilter)?.name}</span>
             )}
           </p>
         </div>
@@ -277,32 +257,32 @@ const MarketplacePage = () => {
               {/* Main rotating circles */}
               <div className="relative w-24 h-24">
                 {/* Outer ring */}
-                <div className="absolute inset-0 border-4 border-transparent border-t-purple-400 border-r-purple-500 rounded-full animate-spin"></div>
+                <div className="absolute inset-0 border-4 border-transparent border-t-green-400 border-r-blue-400 rounded-full animate-spin"></div>
                 
                 {/* Middle ring */}
-                <div className="absolute inset-2 border-3 border-transparent border-b-violet-400 border-l-purple-300 rounded-full animate-spin" style={{animationDirection: 'reverse', animationDuration: '1.5s'}}></div>
+                <div className="absolute inset-2 border-3 border-transparent border-b-purple-400 border-l-cyan-400 rounded-full animate-spin" style={{animationDirection: 'reverse', animationDuration: '1.5s'}}></div>
                 
                 {/* Inner core */}
-                <div className="absolute inset-6 bg-gradient-to-r from-purple-400 via-purple-500 to-violet-400 rounded-full animate-pulse"></div>
+                <div className="absolute inset-6 bg-gradient-to-r from-green-400 via-blue-400 to-purple-400 rounded-full animate-pulse"></div>
                 
                 {/* Orbiting dots */}
                 <div className="absolute inset-0 animate-spin" style={{animationDuration: '3s'}}>
-                  <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-purple-400 rounded-full shadow-lg shadow-purple-400/50"></div>
+                  <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-green-400 rounded-full shadow-lg shadow-green-400/50"></div>
                 </div>
                 <div className="absolute inset-0 animate-spin" style={{animationDuration: '2s', animationDirection: 'reverse'}}>
-                  <div className="absolute top-1/2 -right-1 transform -translate-y-1/2 w-2 h-2 bg-purple-500 rounded-full shadow-lg shadow-purple-500/50"></div>
+                  <div className="absolute top-1/2 -right-1 transform -translate-y-1/2 w-2 h-2 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50"></div>
                 </div>
                 <div className="absolute inset-0 animate-spin" style={{animationDuration: '2.5s'}}>
-                  <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2.5 h-2.5 bg-violet-400 rounded-full shadow-lg shadow-violet-400/50"></div>
+                  <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2.5 h-2.5 bg-purple-400 rounded-full shadow-lg shadow-purple-400/50"></div>
                 </div>
               </div>
               
               {/* Pulsing background glow */}
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-purple-600/20 to-violet-500/20 rounded-full blur-xl animate-pulse scale-150"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 via-blue-500/20 to-purple-500/20 rounded-full blur-xl animate-pulse scale-150"></div>
             </div>
             
             <div className="text-center">
-              <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-400 via-purple-500 to-violet-400 bg-clip-text text-transparent mb-3">
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-green-400 via-blue-400 to-purple-400 bg-clip-text text-transparent mb-3">
                 Loading AI Agents
               </h3>
               <p className="text-gray-400 animate-pulse text-lg">
@@ -311,9 +291,9 @@ const MarketplacePage = () => {
               
               {/* Loading dots */}
               <div className="flex justify-center gap-2 mt-4">
-                <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{animationDelay: '0s'}}></div>
-                <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                <div className="w-2 h-2 bg-violet-400 rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></div>
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-bounce" style={{animationDelay: '0s'}}></div>
+                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></div>
               </div>
             </div>
           </div>
@@ -325,30 +305,30 @@ const MarketplacePage = () => {
                 <div
                   key={agent.id}
                   onClick={() => handleAgentClick(agent)}
-                  className="group relative bg-gradient-to-br from-gray-900/60 via-gray-900/40 to-black/60 backdrop-blur-xl border border-gray-700/30 rounded-3xl p-6 hover:bg-gradient-to-br hover:from-gray-900/80 hover:via-gray-900/60 hover:to-black/80 hover:border-purple-500/40 hover:shadow-2xl hover:shadow-purple-500/10 hover:-translate-y-2 transition-all duration-500 cursor-pointer"
+                  className="group relative bg-gradient-to-br from-gray-800/40 via-gray-800/30 to-gray-900/40 backdrop-blur-xl border border-gray-700/50 rounded-3xl p-6 hover:bg-gradient-to-br hover:from-gray-800/60 hover:via-gray-800/50 hover:to-gray-900/60 hover:border-green-500/40 hover:shadow-2xl hover:shadow-green-500/10 hover:-translate-y-2 transition-all duration-500 cursor-pointer"
                 >
                   {/* Enhanced glassmorphism overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-white/2 to-transparent rounded-3xl"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-white/5 to-transparent rounded-3xl"></div>
                   
                   {/* Dynamic glow effect */}
-                  <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-purple-500/0 via-purple-500/10 to-purple-600/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+                  <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-green-500/0 via-green-500/10 to-blue-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
                   
                   {/* Status badges */}
                   <div className="absolute top-4 right-4 flex flex-col gap-2">
                     {agent.trending && (
-                      <span className="bg-gradient-to-r from-purple-500/20 to-purple-600/20 backdrop-blur-sm text-purple-300 text-xs font-medium px-3 py-1.5 rounded-full flex items-center gap-1 border border-purple-500/40">
+                      <span className="bg-gradient-to-r from-green-500/20 to-blue-500/20 backdrop-blur-sm text-green-300 text-xs font-medium px-3 py-1.5 rounded-full flex items-center gap-1 border border-green-500/40">
                         <TrendingUp size={12} />
                         Trending
                       </span>
                     )}
                     {agent.owned && (
-                      <span className="bg-gradient-to-r from-violet-500/20 to-purple-500/20 backdrop-blur-sm text-violet-300 text-xs font-medium px-3 py-1.5 rounded-full flex items-center gap-1 border border-violet-500/40">
+                      <span className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 backdrop-blur-sm text-purple-300 text-xs font-medium px-3 py-1.5 rounded-full flex items-center gap-1 border border-purple-500/40">
                         <Heart size={12} />
                         Owned
                       </span>
                     )}
                     {agent.createdByUser && (
-                      <span className="bg-gradient-to-r from-purple-400/20 to-violet-500/20 backdrop-blur-sm text-purple-300 text-xs font-medium px-3 py-1.5 rounded-full flex items-center gap-1 border border-purple-400/40">
+                      <span className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 backdrop-blur-sm text-yellow-300 text-xs font-medium px-3 py-1.5 rounded-full flex items-center gap-1 border border-yellow-500/40">
                         <Crown size={12} />
                         Your Creation
                       </span>
@@ -363,7 +343,7 @@ const MarketplacePage = () => {
                     </div>
 
                     {/* Title and description */}
-                    <h3 className="text-xl font-bold text-white mb-3 group-hover:text-purple-300 transition-colors leading-tight">
+                    <h3 className="text-xl font-bold text-white mb-3 group-hover:text-green-300 transition-colors leading-tight">
                       {agent.name}
                     </h3>
                     <p className="text-gray-300 text-sm mb-5 leading-relaxed min-h-[3rem]">
@@ -372,9 +352,9 @@ const MarketplacePage = () => {
                     
                     {/* Stats */}
                     <div className="flex items-center justify-between mb-5 text-sm">
-                      <div className="flex items-center gap-1 bg-purple-500/15 backdrop-blur-sm px-3 py-1.5 rounded-xl border border-purple-500/20">
-                        <Star size={14} className="text-purple-400 fill-current" />
-                        <span className="font-bold text-purple-300">{typeof agent.rating === 'number' ? agent.rating.toFixed(1) : agent.rating}</span>
+                      <div className="flex items-center gap-1 bg-yellow-500/15 backdrop-blur-sm px-3 py-1.5 rounded-xl border border-yellow-500/20">
+                        <Star size={14} className="text-yellow-400 fill-current" />
+                        <span className="font-bold text-yellow-300">{typeof agent.rating === 'number' ? agent.rating.toFixed(1) : agent.rating}</span>
                       </div>
                       <div className="flex items-center gap-1 text-gray-400">
                         <Users size={14} />
@@ -389,16 +369,16 @@ const MarketplacePage = () => {
                     {/* Tags */}
                     <div className="flex flex-wrap gap-2 mb-5">
                       {agent.tags.slice(0, 3).map(tag => (
-                        <span key={tag} className="bg-gray-800/60 backdrop-blur-sm text-gray-300 text-xs px-3 py-1.5 rounded-xl border border-gray-700/40 font-medium">
+                        <span key={tag} className="bg-gray-700/60 backdrop-blur-sm text-gray-300 text-xs px-3 py-1.5 rounded-xl border border-gray-600/40 font-medium">
                           {tag}
                         </span>
                       ))}
                     </div>
 
                     {/* Footer */}
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-700/30">
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-700/40">
                       <div>
-                        <div className="text-xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
+                        <div className="text-xl font-bold bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
                           {agent.price}
                         </div>
                         <div className="text-xs text-gray-400 font-medium">by {agent.creator}</div>
@@ -408,7 +388,7 @@ const MarketplacePage = () => {
                           e.stopPropagation()
                           handleAgentClick(agent)
                         }}
-                        className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-2xl font-semibold hover:from-purple-400 hover:to-purple-500 hover:shadow-xl hover:shadow-purple-500/30 transition-all duration-300 transform hover:scale-105"
+                        className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-6 py-3 rounded-2xl font-semibold hover:from-green-400 hover:to-blue-400 hover:shadow-xl hover:shadow-green-500/30 transition-all duration-300 transform hover:scale-105"
                       >
                         {agent.owned ? 'Launch' : 'Deploy'}
                       </button>
@@ -426,20 +406,20 @@ const MarketplacePage = () => {
             <div className="relative">
               {/* Outer rotating ring */}
               <div className="w-20 h-20 border-4 border-gray-700/30 rounded-full animate-spin">
-                <div className="absolute top-0 left-0 w-4 h-4 bg-gradient-to-r from-purple-400 to-purple-600 rounded-full"></div>
+                <div className="absolute top-0 left-0 w-4 h-4 bg-gradient-to-r from-green-400 to-blue-400 rounded-full"></div>
               </div>
               
               {/* Inner pulsing dot */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full animate-pulse"></div>
+                <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-blue-500 rounded-full animate-pulse"></div>
               </div>
               
               {/* Floating particles */}
               <div className="absolute -inset-4">
-                <div className="absolute top-2 left-2 w-2 h-2 bg-purple-400/60 rounded-full animate-ping" style={{animationDelay: '0s'}}></div>
-                <div className="absolute top-4 right-1 w-1.5 h-1.5 bg-purple-500/60 rounded-full animate-ping" style={{animationDelay: '0.5s'}}></div>
-                <div className="absolute bottom-3 left-1 w-1 h-1 bg-violet-400/60 rounded-full animate-ping" style={{animationDelay: '1s'}}></div>
-                <div className="absolute bottom-1 right-4 w-2 h-2 bg-purple-600/60 rounded-full animate-ping" style={{animationDelay: '1.5s'}}></div>
+                <div className="absolute top-2 left-2 w-2 h-2 bg-green-400/60 rounded-full animate-ping" style={{animationDelay: '0s'}}></div>
+                <div className="absolute top-4 right-1 w-1.5 h-1.5 bg-blue-400/60 rounded-full animate-ping" style={{animationDelay: '0.5s'}}></div>
+                <div className="absolute bottom-3 left-1 w-1 h-1 bg-purple-400/60 rounded-full animate-ping" style={{animationDelay: '1s'}}></div>
+                <div className="absolute bottom-1 right-4 w-2 h-2 bg-cyan-400/60 rounded-full animate-ping" style={{animationDelay: '1.5s'}}></div>
               </div>
             </div>
             
@@ -453,7 +433,7 @@ const MarketplacePage = () => {
         {/* No results */}
         {!loading && filteredAgents.length === 0 && (
           <div className="text-center py-20">
-            <div className="bg-gradient-to-br from-gray-900/60 via-gray-900/40 to-black/60 backdrop-blur-xl border border-gray-700/30 rounded-3xl p-12 mx-auto max-w-lg">
+            <div className="bg-gradient-to-br from-gray-800/40 via-gray-800/30 to-gray-900/40 backdrop-blur-xl border border-gray-700/50 rounded-3xl p-12 mx-auto max-w-lg">
               <div className="text-gray-500 mb-6">
                 <Search size={64} className="mx-auto" />
               </div>
