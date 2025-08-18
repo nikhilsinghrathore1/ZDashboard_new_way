@@ -32,8 +32,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased `}
       >
        {/* Use the new ClientLayout to wrap the children */}
-        <ClientLayout>{children}</ClientLayout>
-      </body>
+          <Providers>
+          <ClientLayout>{children}</ClientLayout>
+        </Providers>      </body>
     </html>
   );
 }

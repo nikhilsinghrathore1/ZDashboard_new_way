@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Search, Bell, Wallet, ChevronDown, LogOut, User, Settings, HelpCircle } from "lucide-react";
 
 // --- Imports are corrected here ---
@@ -108,7 +108,7 @@ const TopNavbar = () => {
   // --- UPDATED: Effect to check user existence and create if needed ---
   useEffect(() => {
     const handleUserManagement = async () => {
-      if (isConnected && address && !userChecked && !isCheckingUser && !isCreatingUser) {
+      if (isConnected && address && !userChecked) {
         setIsCheckingUser(true);
         
         try {
@@ -187,7 +187,7 @@ const TopNavbar = () => {
     };
 
     handleUserManagement();
-  }, [isConnected, address, userChecked, isCheckingUser, isCreatingUser]);
+  }, [isConnected, address, userChecked]);
 
   // --- Reset user states when disconnected ---
   useEffect(() => {
@@ -222,10 +222,10 @@ const TopNavbar = () => {
     connect({ connector: injected() });
   };
 
-  const handleDisconnect = () => {
-    disconnect();
-    setShowUserMenu(false);
-  };
+  const handleDisconnect = useCallback(() => {
+  disconnect();
+  setShowUserMenu(false);
+}, [disconnect]);
 
   return (
     <header 
@@ -253,7 +253,7 @@ const TopNavbar = () => {
       </div>
 
       {/* Right Section */}
-      <div className="flex items-center space-x-4 relative z-10">
+      <div className="flex items-center space-x-4 relative z-50">
         {/* User Status Indicator */}
         {(isCheckingUser || isCreatingUser) && (
           <div className="flex items-center space-x-2 text-yellow-400 text-sm">
@@ -375,9 +375,13 @@ const TopNavbar = () => {
                   </div>
                   <div className="border-t border-gray-700 py-1">
                     <button 
-                      onClick={handleDisconnect}
-                      className="w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-gray-800/50 hover:text-red-300 transition-colors flex items-center"
-                    >
+                     // --- TEMPORARY CHANGE FOR DEBUGGING ---
+                       onClick={() => {
+                          console.log("Disconnect button clicked!");
+                          disconnect();
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-gray-800/50 hover:text-red-300 transition-colors flex items-center"
+                      >
                       <LogOut className="mr-2 h-4 w-4" />
                       Disconnect Wallet
                     </button>

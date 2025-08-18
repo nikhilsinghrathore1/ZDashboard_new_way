@@ -88,6 +88,8 @@ const AiAgentsCard: React.FC<AiAgentsCardProps> = ({ img, title, description, pr
       const amountInWei = ethers.parseUnits(numericPrice, 18);
 
       // Call the rentAgent function now that approval is granted
+    //  @ts-ignore
+
       rentAgent({
         address: agentPlatformAddress,
         abi: AgentPlatformABI.abi,
@@ -128,6 +130,7 @@ const AiAgentsCard: React.FC<AiAgentsCardProps> = ({ img, title, description, pr
     try {
       console.log("1️⃣ Requesting token approval...");
       // This only starts the FIRST step (approve)
+      //  @ts-ignore
       await approveTokens({
         address: yourTokenAddress,
         abi: ERC20ABI,

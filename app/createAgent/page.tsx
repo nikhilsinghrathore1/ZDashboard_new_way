@@ -1,7 +1,17 @@
 'use client'
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAccount } from 'wagmi';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useWatchContractEvent } from 'wagmi';
+import { ethers } from 'ethers';
+
+// --- IMPORT YOUR CONTRACT INFO ---
+import AgentPlatformABI from '../contracts/AgentPlatform.json';
+import ERC20ABI from '../contracts/erc20_abi.json';
+import { agentPlatformAddress, yourTokenAddress } from '../contracts/addresses';
+
+// A constant for the deployment fee. You can get this from your backend or set it here.
+const DEPLOYMENT_FEE = "10"; // Example: 10 ZLAG tokens
+
 
 const AgentCreationPage = () => {
   const router = useRouter();
@@ -17,6 +27,132 @@ const AgentCreationPage = () => {
     price: 10.99,
     isForSale: true
   });
+
+  // --- WAGMI HOOKS FOR DEPLOYMENT PAYMENT ---
+  const { data: approveHash, writeContractAsync: approveTokens, isPending: isApproving, reset: resetApprove } = useWriteContract();
+  const { data: deployHash, writeContractAsync: deployAgent, isPending: isDeploying, reset: resetDeploy } = useWriteContract();
+
+  const { isSuccess: isApprovalConfirmed } = useWaitForTransactionReceipt({ hash: approveHash });
+  const { isSuccess: isDeployConfirmed, isLoading: isConfirmingDeploy } = useWaitForTransactionReceipt({ hash: deployHash });
+  
+  // Combine all blockchain processing states
+  const isBlockchainProcessing = isApproving || isDeploying || isConfirmingDeploy;
+
+
+  // --- This useEffect triggers the deployAgent call AFTER the approval is confirmed ---
+  useEffect(() => {
+    if (isApprovalConfirmed) {
+      console.log("✅ Approval confirmed! Now calling deployAgent...");
+      const feeInWei = ethers.parseUnits(DEPLOYMENT_FEE, 18);
+      
+      //  @ts-ignore
+      deployAgent({
+        address: agentPlatformAddress,
+        abi: AgentPlatformABI.abi,
+        functionName: 'deployAgent',
+        args: [feeInWei],
+      }).catch(err => {
+        console.error("❌ Deploy agent call failed after approval", err);
+        setError("Payment failed at the deployment step. Please try again.");
+        setIsLoading(false); // Stop the full-page loader on error
+      });
+    }
+  }, [isApprovalConfirmed, deployAgent]);
+
+  // --- This useWatchContractEvent listens for the final success signal from the blockchain ---
+  useWatchContractEvent({
+    address: agentPlatformAddress,
+    abi: AgentPlatformABI.abi,
+    eventName: 'AgentDeployed',
+    onLogs(logs) {
+      // Find the event log relevant to the current user
+      //  @ts-ignore
+      const userLog = logs.find(log => log.args.deployer === address);
+      if (userLog) {
+        //  @ts-ignore
+        const { agentId } = userLog.args;
+        console.log(`✅ Event: AgentDeployed! New Agent ID: ${agentId.toString()}`);
+        
+        // Now that payment is fully confirmed and we have the agentId, call the backend
+        handleSaveToBackend(agentId.toString());
+      }
+    },
+  });
+
+  // --- This function starts the blockchain payment process ---
+  const handleDeployClick = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isConnected || !address) {
+      setError('Please connect your wallet before creating an agent');
+      return;
+    }
+    if (!formData.name || !formData.description) {
+      setError('Please fill in all required fields');
+      return;
+    }
+    
+    setIsLoading(true); // Show the full-page loader
+    setError('');
+    resetApprove();
+    resetDeploy();
+
+    try {
+      console.log("1️⃣ Requesting token approval for deployment fee...");
+      const feeInWei = ethers.parseUnits(DEPLOYMENT_FEE, 18);
+      //  @ts-ignore
+      await approveTokens({
+        address: yourTokenAddress,
+        abi: ERC20ABI,
+        functionName: 'approve',
+        args: [agentPlatformAddress, feeInWei],
+      });
+      console.log("⏳ Approval transaction sent, waiting for confirmation...");
+    } catch (err) {
+      console.error("❌ Approval transaction failed to send:", err);
+      setError("Failed to initiate payment. Please check your wallet and try again.");
+      setIsLoading(false); // Stop loader on error
+    }
+  };
+
+  // --- This function sends the data to your backend AFTER payment is successful ---
+  const handleSaveToBackend = async (onChainAgentId: string) => { // <-- It now receives the on-chain ID
+    console.log(`2️⃣ Saving agent (ON-CHAIN ID: ${onChainAgentId}) to backend...`);
+    try {
+      // --- CHANGE 1: RE-ADD getCapabilities to the payload ---
+      const payload = {
+        name: formData.name,
+        description: formData.description,
+        model: "GPT-4",
+        capabilities: getCapabilities(formData.personality, formData.responseStyle),
+        price: formData.price,
+        isForSale: formData.isForSale,
+        creatorWalletAddress: address,
+        // --- CHANGE 2: SEND THE BLOCKCHAIN ID TO YOUR BACKEND ---
+        onChainAgentId: parseInt(onChainAgentId, 10) 
+      };
+      
+      const response = await fetch('https://zlag-ownable-service.vercel.app/api/agents', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) throw new Error('Backend failed to save the agent.');
+
+      const responseData = await response.json();
+      console.log('✅ Agent saved successfully to backend:', responseData);
+      
+      // --- CHANGE 3: REDIRECT USING THE DATABASE ID FROM THE RESPONSE ---
+      const databaseId = responseData.agent.id;
+      router.push(`/agent/${databaseId}`);
+
+    } catch (err: any) {
+      console.error('Error saving agent to backend:', err);
+      setError(err.message || 'Payment succeeded, but failed to save agent data. Please contact support.');
+    } finally {
+      setIsLoading(false); // Hide the full-page loader
+    }
+  };
 
   const personalityOptions = [
     { value: 'professional', label: 'Professional & Direct' },
@@ -42,6 +178,28 @@ const AgentCreationPage = () => {
     // Clear error when user starts typing
     if (error) setError('');
   };
+  
+  const handlePriceChange = (e: any) => {
+    const value = e.target.value;
+    setFormData({
+      ...formData,
+      price: value === '' ? 0 : parseFloat(value) || 0
+    });
+    // Clear error when user starts typing
+    if (error) setError('');
+  };
+  
+  // Then in your JSX, use the separate handler for price:
+  <input
+    type="number"
+    name="price"
+    value={formData.price}
+    onChange={handlePriceChange}  // Use separate handler
+    step="0.01"
+    min="0"
+    className="w-full px-4 py-4 bg-black/50 border border-purple-500/50 rounded-xl text-white placeholder-gray-500 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 focus:outline-none transition-all duration-200"
+    placeholder="10.99"
+  />
 
   // Function to map personality and response style to capabilities
   const getCapabilities = (personality: string, responseStyle: string) => {
@@ -90,12 +248,13 @@ const AgentCreationPage = () => {
       const payload = {
         name: formData.name,
         description: formData.description,
-        model: "GPT-4", // Updated to match the example
+        model: "GPT-4",
         capabilities: getCapabilities(formData.personality, formData.responseStyle),
-        price: formData.price,
+        price: typeof formData.price === 'string' ? parseFloat(formData.price) : formData.price, // Convert string to number
         isForSale: formData.isForSale,
         creatorWalletAddress: address
       };
+      
 
       console.log("this is the payload: ", payload); 
       console.log('Sending payload:', payload);
@@ -410,7 +569,7 @@ const AgentCreationPage = () => {
                 </div>
               )}
 
-              <form onSubmit={handleCreateAgent} className="space-y-8">
+              <form onSubmit={handleDeployClick} className="space-y-8">
                 {/* Agent Identity */}
                 <div className="space-y-6">
                   <div>
@@ -445,13 +604,13 @@ const AgentCreationPage = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-3">
-                      Agent Price (ETH)
+                      Agent Price (Zlag)
                     </label>
                     <input
                       type="number"
                       name="price"
                       value={formData.price}
-                      onChange={handleInputChange}
+                      onChange={handlePriceChange}
                       step="0.01"
                       min="0"
                       className="w-full px-4 py-4 bg-black/50 border border-purple-500/50 rounded-xl text-white placeholder-gray-500 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 focus:outline-none transition-all duration-200"
@@ -537,13 +696,18 @@ const AgentCreationPage = () => {
                 <div className="pt-8 border-t border-purple-500/30">
                   <button
                     type="submit"
-                    disabled={!formData.name || !formData.description || isLoading || !isConnected}
+                     disabled={!formData.name || !formData.description || isBlockchainProcessing || isLoading || !isConnected}
                     className="w-full px-8 py-5 bg-purple-600 text-white font-semibold rounded-xl hover:bg-purple-500 transition-all duration-300 hover:shadow-xl hover:shadow-purple-600/30 focus:outline-none focus:ring-4 focus:ring-purple-400/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-lg"
                   >
-                    {isLoading ? (
+                    {isBlockchainProcessing ? (
+                      <>
+                      <div className="w-6 h-6 mr-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Processing Payment...
+                      </>
+                    ) : isLoading ? (
                       <>
                         <div className="w-6 h-6 mr-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        Deploying...
+                        Saving to Backend...
                       </>
                     ) : (
                       <>

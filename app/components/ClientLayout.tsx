@@ -8,7 +8,7 @@ import { BlockchainListener } from  "./BlockchainListner"
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   return (
     // The Provider component must wrap your entire layout
-    <Providers>
+    <>
       {/* The BlockchainListener can live here, active for all pages */}
       <BlockchainListener />
       
@@ -23,6 +23,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
           {children}
         </div>
       </div>
-    </Providers>
+    </>
   );
 }

@@ -78,7 +78,7 @@ const NavItem: React.FC<NavItemProps> = ({
         } group-hover:text-purple-400 transition-all duration-300`}
         size={20}
       />
-      <div className="leading-6">
+      <div className="leading-4">
         <h1
           className={`text-md font-medium transition-all duration-300 ${
             isActive ? "text-white" : "text-gray-300 group-hover:text-white"

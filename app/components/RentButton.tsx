@@ -31,6 +31,7 @@ export const RentButton = ({ agentId, amount }: RentButtonProps) => {
 
       // --- 1. APPROVE STEP ---
       setIsApproving(true);
+      //  @ts-ignore
       await approve({
         address: yourTokenAddress,
         abi: ERC20ABI,
@@ -41,6 +42,7 @@ export const RentButton = ({ agentId, amount }: RentButtonProps) => {
 
       // --- 2. RENT STEP ---
       // The user will be prompted for a second signature here
+      //  @ts-ignore
       await rentAgent({
         address: agentPlatformAddress,
         abi: AgentPlatformABI.abi, // Access the abi property from the imported JSON

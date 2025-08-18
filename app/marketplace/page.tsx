@@ -1,7 +1,13 @@
 "use client"
 import React, { useState, useEffect } from 'react'
-import { Search, Star, Users, Download, TrendingUp, Bot, Code, MessageSquare, Image, Music, Brain, Heart, User, Crown, GitBranch, DollarSign, Zap, Wallet } from 'lucide-react'
-import { useAccount, useConnect, useDisconnect } from 'wagmi'
+import { Search, Star, Users, Download, TrendingUp, Bot, Code, MessageSquare, Image, Music, Brain, Heart, User, Crown, GitBranch, DollarSign, Zap, Wallet, ShoppingCart, X, Check, Loader } from 'lucide-react'
+import { useAccount, useConnect, useDisconnect, useWriteContract, useWaitForTransactionReceipt, useWatchContractEvent } from 'wagmi'
+import { ethers } from 'ethers'
+
+// --- IMPORT YOUR CONTRACT INFO ---
+import AgentPlatformABI from '../contracts/AgentPlatform.json';
+import ERC20ABI from '../contracts/erc20_abi.json';
+import { agentPlatformAddress, yourTokenAddress } from '../contracts/addresses';
 
 const MarketplacePage = () => {
   const [searchTerm, setSearchTerm] = useState('')
@@ -11,14 +17,158 @@ const MarketplacePage = () => {
   const [createdAgents, setCreatedAgents] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  
+  // Purchase modal state
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false)
+  const [selectedAgent, setSelectedAgent] = useState(null)
+  //const [purchasing, setPurchasing] = useState(false)
+  const [purchaseSuccess, setPurchaseSuccess] = useState(false)
+  const [purchaseError, setPurchaseError] = useState(null)
 
-  // Get wallet address from wagmi
-  const { address: userAddress, isConnected, isConnecting } = useAccount()
+// --- WAGMI HOOKS FOR WALLET AND PAYMENT ---
+  const { address: userAddress, isConnected } = useAccount()
   const { connect, connectors, isPending } = useConnect()
   const { disconnect } = useDisconnect()
 
-  // Custom featured agents
+  const { data: approveHash, writeContractAsync: approveTokens, isPending: isApproving, reset: resetApprove } = useWriteContract();
+  const { data: rentHash, writeContractAsync: rentAgent, isPending: isRenting, reset: resetRent } = useWriteContract();
+
+  const { isSuccess: isApprovalConfirmed } = useWaitForTransactionReceipt({ hash: approveHash });
+  const { isSuccess: isRentConfirmed, isLoading: isConfirmingRent } = useWaitForTransactionReceipt({ hash: rentHash });
+  
+  const isBlockchainProcessing = isApproving || isRenting || isConfirmingRent;
+  
+  // --- This useEffect triggers the rentAgent call AFTER the approval is confirmed ---
+  useEffect(() => {
+    if (isApprovalConfirmed && selectedAgent) {
+      console.log("✅ Approval confirmed! Now calling rentAgent...");
+      const numericPrice = selectedAgent.price.split(' ')[0];
+      const amountInWei = ethers.parseUnits(numericPrice, 18);
+
+      //  @ts-ignore
+      
+      rentAgent({
+        address: agentPlatformAddress,
+        abi: AgentPlatformABI.abi,
+        functionName: 'rentAgent',
+        args: [selectedAgent.agentId, amountInWei],
+      }).catch(err => {
+        console.error("❌ Rent agent call failed after approval", err);
+        setPurchaseError("Payment failed at the final step. Please try again.");
+      });
+    }
+  }, [isApprovalConfirmed, selectedAgent, rentAgent]);
+
+  // --- This listener waits for the on-chain event, then calls the backend ---
+  useWatchContractEvent({
+    address: agentPlatformAddress,
+    abi: AgentPlatformABI.abi,
+    eventName: 'RentalPaid',
+    onLogs(logs) {
+      //  @ts-ignore
+      const userLog = logs.find(log => log.args.renter === userAddress && log.args.agentId.toString() === selectedAgent?.agentId.toString());
+      if (userLog) {
+        //  @ts-ignore
+        console.log(`✅ Event: RentalPaid! Agent ID: ${userLog.args.agentId.toString()}`);
+        // Now that payment is confirmed on-chain, update the backend
+        handleUpdateBackendAfterPurchase();
+      }
+    },
+  });
+
+  // --- This is the NEW function that starts the blockchain payment ---
+  const handleBlockchainPayment = async () => {
+    if (!selectedAgent || !userAddress) {
+      setPurchaseError("No agent selected or wallet not connected.");
+      return;
+    }
+    
+    setPurchaseError(null);
+    resetApprove();
+    resetRent();
+
+    try {
+      console.log("1️⃣ Requesting token approval for rental...");
+      const numericPrice = selectedAgent.price.split(' ')[0];
+      const amountInWei = ethers.parseUnits(numericPrice, 18);
+
+      //  @ts-ignore
+
+      await approveTokens({
+        address: yourTokenAddress,
+        abi: ERC20ABI,
+        functionName: 'approve',
+        args: [agentPlatformAddress, amountInWei],
+      });
+      console.log("⏳ Approval transaction sent, waiting for confirmation...");
+    } catch (err) {
+      console.error("❌ Approval transaction failed to send:", err);
+      setPurchaseError("Failed to initiate payment. Please check your wallet and try again.");
+    }
+  };
+  
+  // --- This is your OLD function, now repurposed to only handle the backend update ---
+  const handleUpdateBackendAfterPurchase = async () => {
+    console.log("2️⃣ Updating backend after successful payment...");
+    try {
+      const payload = {
+        agentId: selectedAgent.agentId,
+        buyerWalletAddress: userAddress
+      };
+      
+      const response = await fetch('https://zlag-ownable-service.vercel.app/api/agents/buy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Backend update failed.');
+      }
+
+      const result = await response.json();
+      if (result.success) {
+        console.log("🎉 Purchase successful! Backend updated.");
+        setPurchaseSuccess(true);
+        // Optimistically update UI
+        setOwnedAgents(prev => [...prev, { ...selectedAgent, owned: true }]);
+        setApiAgents(prev => prev.filter(agent => agent.agentId !== selectedAgent.agentId));
+        
+        setTimeout(() => {
+          setShowPurchaseModal(false);
+        }, 2000);
+      } else {
+        throw new Error(result.message || 'Backend returned a failure message.');
+      }
+    } catch (error) {
+      console.error("❌ Backend/unexpected error after purchase:", error);
+      setPurchaseError(`Payment succeeded, but backend update failed: ${error.message}`);
+    }
+  };
+
+  // Custom featured agents - updated with one free trading bot
   const featuredAgents = [
+    {
+      id: 'free_trading_bot',
+      name: "Free Trading Bot",
+      description: "A free AI trading assistant that helps analyze market trends and provides basic trading insights",
+      price: "Free",
+      rating: 4.8,
+      users: "12.5k",
+      downloads: "45.2k",
+      trending: true,
+      creator: "Zlag Platform",
+      tags: ["Trading", "Free", "Market Analysis"],
+      icon: DollarSign,
+      color: "bg-green-500",
+      owned: false,
+      createdByUser: false,
+      liked: true,
+      redirectUrl: "/agent/trading",
+      agentId: 1000,
+      isFree: true
+    },
     {
       id: 'lana_codes',
       name: "Lana Codes",
@@ -36,7 +186,7 @@ const MarketplacePage = () => {
       createdByUser: false,
       liked: true,
       redirectUrl: "/agent/codeGen",
-      agentId: 0,
+      agentId: 1001,
     },
     {
       id: 'pushit',
@@ -55,7 +205,7 @@ const MarketplacePage = () => {
       createdByUser: false,
       liked: false,
       redirectUrl: "/agent/pushit",
-      agentId: 0,
+      agentId: 1002,
     },
     {
       id: 'quicktrader',
@@ -70,11 +220,11 @@ const MarketplacePage = () => {
       tags: ["Trading", "Finance", "Analysis"],
       icon: DollarSign,
       color: "bg-purple-600",
-      owned: true,
+      owned: false,
       createdByUser: false,
       liked: true,
       redirectUrl: "/agent/trading",
-      agentId: 0,
+      agentId: 1003,
     }
   ]
 
@@ -102,10 +252,15 @@ const MarketplacePage = () => {
 
   // Transform API agents to match our format
   const transformApiAgent = (agent, isOwned = false, isCreated = false) => ({
-    id: agent.id,
+    // The DATABASE ID, used for keys and URL links
+    id: agent.id, 
+    
+    // The ON-CHAIN ID from the blockchain, used for payments
+    agentId: agent.onChainAgentId, 
+
     name: agent.name,
     description: agent.description,
-    price: agent.price ? `$${agent.price}` : "Free",
+    price: agent.price ? `${agent.price} Zlag` : "Free", // Changed to Zlag for consistency
     rating: (4.0 + Math.random() * 1.0),
     users: `${(Math.random() * 10 + 1).toFixed(1)}k`,
     downloads: `${(Math.random() * 30 + 5).toFixed(1)}k`,
@@ -118,110 +273,230 @@ const MarketplacePage = () => {
     createdByUser: isCreated,
     liked: Math.random() > 0.5,
     redirectUrl: `/agent/${agent.id}`,
+    //  @ts-ignore
     agentId: agent.id
   })
 
+  // Enhanced handleBuyAgent function
+  const handleBuyAgent = async () => {
+    if (!selectedAgent || !userAddress) {
+      console.error("❌ Missing required data:", {
+        selectedAgent: selectedAgent ? "exists" : "null",
+        userAddress: userAddress ? "exists" : "null"
+      });
+      setPurchaseError("No agent selected or wallet not connected.");
+      return;
+    }
+
+    // Check for valid agentId
+    if (!selectedAgent.agentId && selectedAgent.agentId !== 0) {
+      console.error("❌ Invalid agentId:", selectedAgent.agentId);
+      setPurchaseError("Invalid agent ID. Please try selecting the agent again.");
+      return;
+    }
+
+    try {
+      //  @ts-ignore
+      setPurchasing(true);
+      setPurchaseError(null);
+
+      const payload = {
+        agentId: selectedAgent.agentId,
+        buyerWalletAddress: userAddress
+      };
+
+      console.log("🚀 Attempting to purchase agent with payload:", payload);
+      console.log("🔍 Agent details:", {
+        id: selectedAgent.id,
+        name: selectedAgent.name,
+        agentId: selectedAgent.agentId,
+        price: selectedAgent.price
+      });
+
+      const response = await fetch('https://zlag-ownable-service.vercel.app/api/agents/buy', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+
+      console.log(`📡 Response status: ${response.status} (${response.statusText})`);
+      console.log("📡 Response headers:", Object.fromEntries(response.headers));
+
+      if (!response.ok) {
+        let errorMessage;
+        try {
+          const errorData = await response.json();
+          console.error("❌ Server error response (JSON):", errorData);
+          errorMessage = errorData.message || errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+        } catch {
+          const errorText = await response.text();
+          console.error("❌ Server error response (TEXT):", errorText);
+          errorMessage = errorText || `HTTP ${response.status}: ${response.statusText}`;
+        }
+        
+        setPurchaseError(`Server error (${response.status}): ${errorMessage}`);
+        return;
+      }
+
+      const result = await response.json();
+      console.log("✅ Purchase API response:", result);
+
+      if (result.success) {
+        console.log("🎉 Purchase successful!");
+        setPurchaseSuccess(true);
+        
+        if (result.agent) {
+          const updatedAgent = transformApiAgent(result.agent, true, false);
+          setOwnedAgents(prev => [...prev, updatedAgent]);
+          setApiAgents(prev => prev.filter(agent => agent.agentId !== selectedAgent.agentId));
+          console.log("✅ Agent moved to owned list");
+        }
+        
+        setTimeout(() => {
+          setShowPurchaseModal(false);
+          setSelectedAgent(null);
+          setPurchaseSuccess(false);
+        }, 2000);
+        
+      } else {
+        console.error("❌ Purchase failed:", result.message);
+        setPurchaseError(result.message || 'Purchase failed - server returned error');
+      }
+    } catch (error) {
+      console.error("❌ Network/unexpected error:", error);
+      
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        setPurchaseError('Network connection failed. Please check your internet connection.');
+      } else if (error.name === 'SyntaxError' && error.message.includes('JSON')) {
+        setPurchaseError('Invalid response from server. Please try again.');
+      } else {
+        setPurchaseError(`Unexpected error: ${error.message}`);
+      }
+    } finally {
+      //  @ts-ignore
+      setPurchasing(false);
+    }
+  }
+
   // Fetch agents from different APIs
   useEffect(() => {
-    // Don't fetch if wallet is not connected
     if (!isConnected || !userAddress) {
-      setLoading(false)
-      return
+      setLoading(false);
+      return;
     }
 
     const fetchAgents = async () => {
       try {
-        setLoading(true)
-        setError(null)
+        setLoading(true);
+        setError(null);
 
-        // Fetch all agents from the general API
         const [generalResponse, ownedResponse, createdResponse] = await Promise.allSettled([
           fetch('https://create-agent-backend.vercel.app/agents/'),
           fetch(`https://zlag-ownable-service.vercel.app/api/users/${userAddress}/owned-agents`),
           fetch(`https://zlag-ownable-service.vercel.app/api/users/${userAddress}/created-agents`)
-        ])
+        ]);
 
-        // Handle general agents
         if (generalResponse.status === 'fulfilled' && generalResponse.value.ok) {
-          const generalResult = await generalResponse.value.json()
+          const generalResult = await generalResponse.value.json();
           if (generalResult.success) {
-            const transformedAgents = generalResult.data.map(agent => transformApiAgent(agent))
-            setApiAgents(transformedAgents)
+            const transformedAgents = generalResult.data.map(agent => transformApiAgent(agent));
+            setApiAgents(transformedAgents);
           }
         }
 
-        // Handle owned agents
         if (ownedResponse.status === 'fulfilled' && ownedResponse.value.ok) {
-          const ownedResult = await ownedResponse.value.json()
+          const ownedResult = await ownedResponse.value.json();
           if (ownedResult.success) {
-            const transformedOwned = ownedResult.agents.map(agent => transformApiAgent(agent, true, false))
-            setOwnedAgents(transformedOwned)
+            const transformedOwned = ownedResult.agents.map(agent => transformApiAgent(agent, true, false));
+            setOwnedAgents(transformedOwned);
           }
         }
 
-        // Handle created agents
         if (createdResponse.status === 'fulfilled' && createdResponse.value.ok) {
-          const createdResult = await createdResponse.value.json()
+          const createdResult = await createdResponse.value.json();
           if (createdResult.success) {
-            const transformedCreated = createdResult.agents.map(agent => transformApiAgent(agent, false, true))
-            setCreatedAgents(transformedCreated)
+            const transformedCreated = createdResult.agents.map(agent => transformApiAgent(agent, false, true));
+            setCreatedAgents(transformedCreated);
           }
         }
 
-        // Check if all failed
         if (generalResponse.status === 'rejected' && 
             ownedResponse.status === 'rejected' && 
             createdResponse.status === 'rejected') {
-          setError('Failed to connect to servers')
+          setError('Failed to connect to servers');
         }
 
       } catch (err) {
-        setError('Error connecting to server')
-        console.error('Error fetching agents:', err)
+        setError('Error connecting to server');
+        console.error('Error fetching agents:', err);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchAgents()
-  }, [userAddress, isConnected])
+    fetchAgents();
+  }, [userAddress, isConnected]);
 
-  // Get filtered agents based on selected filter
+  // Updated: Get filtered agents based on selected filter - excludes owned agents from 'all'
   const getFilteredAgents = () => {
-    let agentsToShow = []
+    let agentsToShow = [];
     
     switch (selectedFilter) {
       case 'owned':
-        agentsToShow = ownedAgents
-        break
+        agentsToShow = ownedAgents;
+        break;
       case 'created':
-        agentsToShow = createdAgents
-        break
+        agentsToShow = createdAgents;
+        break;
       default:
-        agentsToShow = [...featuredAgents, ...apiAgents]
-        break
+        // For 'all' filter: exclude agents that are already owned
+        const ownedAgentIds = new Set(ownedAgents.map(agent => agent.agentId));
+        agentsToShow = [
+          ...featuredAgents.filter(agent => !ownedAgentIds.has(agent.agentId)),
+          ...apiAgents.filter(agent => !ownedAgentIds.has(agent.agentId))
+        ];
+        break;
     }
 
     return agentsToShow.filter(agent => {
       return agent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
              agent.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-             agent.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
-    })
-  }
+             agent.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+    });
+  };
 
-  const filteredAgents = getFilteredAgents()
+  const filteredAgents = getFilteredAgents();
 
   const filters = [
     { id: 'all', name: 'All Agents', icon: Bot },
     { id: 'owned', name: 'Agents You Own', icon: Heart },
     { id: 'created', name: 'Created by You', icon: Crown }
-  ]
+  ];
 
   const handleAgentClick = (agent) => {
-    if (agent.redirectUrl) {
-      window.location.href = agent.redirectUrl
+    // Handle free agents or owned/created agents directly
+    if (agent.owned || agent.createdByUser || agent.isFree) {
+      if (agent.redirectUrl) {
+        window.location.href = agent.redirectUrl;
+      }
+    } else {
+      setSelectedAgent(agent);
+      setShowPurchaseModal(true);
+      setPurchaseSuccess(false);
+      setPurchaseError(null);
     }
-  }
+  };
+
+  const closePurchaseModal = () => {
+    setShowPurchaseModal(false);
+    setSelectedAgent(null);
+    setPurchaseSuccess(false);
+    setPurchaseError(null);
+    resetApprove();
+    resetRent();
+  };
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -245,7 +520,6 @@ const MarketplacePage = () => {
             </h1>
             
             <div className="flex items-center gap-4">
-              {/* Wallet Connection Status */}
               {!isConnected ? (
                 <div className="flex items-center gap-2">
                   <button
@@ -284,7 +558,6 @@ const MarketplacePage = () => {
           
           {/* Search and filters */}
           <div className="flex flex-col sm:flex-row gap-4">
-            {/* Search */}
             <div className="relative flex-1">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-purple-400" size={20} />
               <input
@@ -296,10 +569,9 @@ const MarketplacePage = () => {
               />
             </div>
             
-            {/* Filter buttons */}
             <div className="flex gap-3 overflow-x-auto">
               {filters.map(filter => {
-                const FilterIcon = filter.icon
+                const FilterIcon = filter.icon;
                 return (
                   <button
                     key={filter.id}
@@ -313,16 +585,95 @@ const MarketplacePage = () => {
                     <FilterIcon size={16} />
                     {filter.name}
                   </button>
-                )
+                );
               })}
             </div>
           </div>
         </div>
       </div>
 
+      {/* Purchase Modal */}
+      {showPurchaseModal && selectedAgent && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-br from-gray-900/90 via-gray-900/80 to-black/90 backdrop-blur-xl border border-purple-800/50 rounded-3xl p-8 max-w-md w-full relative">
+            <button
+              onClick={closePurchaseModal}
+              className="absolute top-6 right-6 text-gray-400 hover:text-white transition-colors"
+            >
+              <X size={24} />
+            </button>
+
+            {purchaseSuccess ? (
+              <div className="text-center">
+                <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Check size={40} className="text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-3">Purchase Successful!</h3>
+                <p className="text-gray-300 mb-6">
+                  You now own <strong>{selectedAgent.name}</strong>. You can access it from your owned agents.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="text-center mb-8">
+                  <div className={`w-20 h-20 ${selectedAgent.color} rounded-2xl flex items-center justify-center mx-auto mb-4`}>
+                    <selectedAgent.icon size={40} className="text-white" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-2">{selectedAgent.name}</h3>
+                  <p className="text-gray-300 text-sm leading-relaxed mb-4">
+                    {selectedAgent.description}
+                  </p>
+                  
+                  <div className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent mb-6">
+                    {selectedAgent.price}
+                  </div>
+                </div>
+
+                {purchaseError && (
+                  <div className="bg-red-500/20 border border-red-500/40 rounded-2xl p-4 mb-6">
+                    <p className="text-red-300 text-sm text-center">{purchaseError}</p>
+                  </div>
+                )}
+
+                <div className="bg-purple-500/10 border border-purple-500/30 rounded-2xl p-4 mb-6">
+                  <p className="text-purple-200 text-sm text-center">
+                    You are about to purchase this AI agent. Once purchased, you'll have full access to deploy and use it.
+                  </p>
+                </div>
+
+                <div className="flex gap-4">
+                  <button 
+                    onClick={closePurchaseModal}
+                    className="flex-1 bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-2xl font-semibold transition-all duration-300"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleBlockchainPayment}
+                    disabled={isBlockchainProcessing}
+                    className="flex-1 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 text-white px-6 py-3 rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {isBlockchainProcessing ? (
+                      <>
+                        <Loader size={18} className="animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingCart size={18} />
+                        Buy Now
+                      </>
+                    )}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Main content */}
       <div className="relative max-w-7xl mx-auto px-6 py-8">
-        {/* Wallet connection required message */}
         {!isConnected && (
           <div className="text-center py-20">
             <div className="bg-gradient-to-br from-gray-900/40 via-gray-900/30 to-black/40 backdrop-blur-xl border border-purple-800/30 rounded-3xl p-12 mx-auto max-w-lg">
@@ -344,42 +695,33 @@ const MarketplacePage = () => {
           </div>
         )}
 
-        {/* Content when wallet is connected */}
         {isConnected && (
           <>
-            {/* Error state */}
             {error && (
               <div className="bg-red-500/20 backdrop-blur-sm border border-red-500/40 rounded-2xl p-4 mb-6">
                 <p className="text-red-300 text-center">{error}</p>
               </div>
             )}
 
-            {/* Stats */}
             <div className="mb-8">
               <p className="text-gray-400 text-sm">
                 Showing {filteredAgents.length} agents
                 {selectedFilter !== 'all' && (
                   <span className="text-purple-400"> • {filters.find(f => f.id === selectedFilter)?.name}</span>
                 )}
+                {selectedFilter === 'all' && (
+                  <span className="text-purple-400"> • Available for purchase</span>
+                )}
               </p>
             </div>
 
-            {/* Loading state */}
             {loading ? (
               <div className="flex flex-col items-center justify-center py-32">
                 <div className="relative mb-8">
-                  {/* Main rotating circles */}
                   <div className="relative w-24 h-24">
-                    {/* Outer ring */}
                     <div className="absolute inset-0 border-4 border-transparent border-t-purple-400 border-r-indigo-400 rounded-full animate-spin"></div>
-                    
-                    {/* Middle ring */}
                     <div className="absolute inset-2 border-3 border-transparent border-b-purple-500 border-l-indigo-500 rounded-full animate-spin" style={{animationDirection: 'reverse', animationDuration: '1.5s'}}></div>
-                    
-                    {/* Inner core */}
                     <div className="absolute inset-6 bg-gradient-to-r from-purple-400 via-indigo-400 to-purple-500 rounded-full animate-pulse"></div>
-                    
-                    {/* Orbiting dots */}
                     <div className="absolute inset-0 animate-spin" style={{animationDuration: '3s'}}>
                       <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-purple-400 rounded-full shadow-lg shadow-purple-400/50"></div>
                     </div>
@@ -390,8 +732,6 @@ const MarketplacePage = () => {
                       <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2.5 h-2.5 bg-purple-500 rounded-full shadow-lg shadow-purple-500/50"></div>
                     </div>
                   </div>
-                  
-                  {/* Pulsing background glow */}
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-indigo-500/20 to-purple-600/20 rounded-full blur-xl animate-pulse scale-150"></div>
                 </div>
                 
@@ -403,7 +743,6 @@ const MarketplacePage = () => {
                     Discovering amazing agents for you...
                   </p>
                   
-                  {/* Loading dots */}
                   <div className="flex justify-center gap-2 mt-4">
                     <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{animationDelay: '0s'}}></div>
                     <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
@@ -414,20 +753,16 @@ const MarketplacePage = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredAgents.map(agent => {
-                  const IconComponent = agent.icon
+                  const IconComponent = agent.icon;
                   return (
                     <div
                       key={agent.id}
                       onClick={() => handleAgentClick(agent)}
                       className="group relative bg-gradient-to-br from-gray-900/40 via-gray-900/30 to-black/40 backdrop-blur-xl border border-purple-800/30 rounded-3xl p-6 hover:bg-gradient-to-br hover:from-gray-900/60 hover:via-gray-900/50 hover:to-black/60 hover:border-purple-500/40 hover:shadow-2xl hover:shadow-purple-500/10 hover:-translate-y-2 transition-all duration-500 cursor-pointer"
                     >
-                      {/* Enhanced glassmorphism overlay */}
                       <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-white/2 to-transparent rounded-3xl"></div>
-                      
-                      {/* Dynamic glow effect */}
                       <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-purple-500/0 via-purple-500/10 to-indigo-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
                       
-                      {/* Status badges */}
                       <div className="absolute top-4 right-4 flex flex-col gap-2">
                         {agent.trending && (
                           <span className="bg-gradient-to-r from-purple-500/20 to-indigo-500/20 backdrop-blur-sm text-purple-300 text-xs font-medium px-3 py-1.5 rounded-full flex items-center gap-1 border border-purple-500/40">
@@ -447,16 +782,19 @@ const MarketplacePage = () => {
                             Your Creation
                           </span>
                         )}
+                        {agent.isFree && (
+                          <span className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur-sm text-green-300 text-xs font-medium px-3 py-1.5 rounded-full flex items-center gap-1 border border-green-500/40">
+                            <Zap size={12} />
+                            Free
+                          </span>
+                        )}
                       </div>
                       
-                      {/* Content */}
                       <div className="relative z-10 pt-4">
-                        {/* Icon */}
                         <div className={`w-16 h-16 ${agent.color} rounded-2xl flex items-center justify-center shadow-xl mb-5 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
                           <IconComponent size={32} className="text-white" />
                         </div>
 
-                        {/* Title and description */}
                         <h3 className="text-xl font-bold text-white mb-3 group-hover:text-purple-300 transition-colors leading-tight">
                           {agent.name}
                         </h3>
@@ -464,7 +802,6 @@ const MarketplacePage = () => {
                           {agent.description}
                         </p>
                         
-                        {/* Stats */}
                         <div className="flex items-center justify-between mb-5 text-sm">
                           <div className="flex items-center gap-1 bg-yellow-500/15 backdrop-blur-sm px-3 py-1.5 rounded-xl border border-yellow-500/20">
                             <Star size={14} className="text-yellow-400 fill-current" />
@@ -480,7 +817,6 @@ const MarketplacePage = () => {
                           </div>
                         </div>
 
-                        {/* Tags */}
                         <div className="flex flex-wrap gap-2 mb-5">
                           {agent.tags.slice(0, 3).map(tag => (
                             <span key={tag} className="bg-purple-800/40 backdrop-blur-sm text-purple-200 text-xs px-3 py-1.5 rounded-xl border border-purple-600/40 font-medium">
@@ -489,32 +825,44 @@ const MarketplacePage = () => {
                           ))}
                         </div>
 
-                        {/* Footer */}
                         <div className="flex items-center justify-between pt-4 border-t border-purple-800/40">
                           <div>
-                            <div className="text-xl font-bold bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">
+                            <div className={`text-xl font-bold ${agent.isFree ? 'text-green-400' : 'bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent'}`}>
                               {agent.price}
                             </div>
                             <div className="text-xs text-gray-400 font-medium">by {agent.creator}</div>
                           </div>
                           <button 
                             onClick={(e) => {
-                              e.stopPropagation()
-                              handleAgentClick(agent)
+                              e.stopPropagation();
+                              handleAgentClick(agent);
                             }}
-                            className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-6 py-3 rounded-2xl font-semibold hover:from-purple-400 hover:to-indigo-400 hover:shadow-xl hover:shadow-purple-500/30 transition-all duration-300 transform hover:scale-105"
+                            className={`px-6 py-3 rounded-2xl font-semibold transition-all duration-300 transform hover:scale-105 flex items-center gap-2 ${
+                              agent.owned || agent.createdByUser || agent.isFree
+                                ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 text-white hover:shadow-xl hover:shadow-green-500/30'
+                                : 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 text-white hover:shadow-xl hover:shadow-purple-500/30'
+                            }`}
                           >
-                            {agent.owned ? 'Launch' : 'Deploy'}
+                            {agent.owned || agent.createdByUser || agent.isFree ? (
+                              <>
+                                <Zap size={16} />
+                                Launch
+                              </>
+                            ) : (
+                              <>
+                                <ShoppingCart size={16} />
+                                Buy
+                              </>
+                            )}
                           </button>
                         </div>
                       </div>
                     </div>
-                  )
+                  );
                 })}
               </div>
             )}
 
-            {/* No results */}
             {!loading && filteredAgents.length === 0 && (
               <div className="text-center py-20">
                 <div className="bg-gradient-to-br from-gray-900/40 via-gray-900/30 to-black/40 backdrop-blur-xl border border-purple-800/30 rounded-3xl p-12 mx-auto max-w-lg">
@@ -523,17 +871,19 @@ const MarketplacePage = () => {
                   </div>
                   <h3 className="text-2xl font-bold text-white mb-3">No agents found</h3>
                   <p className="text-gray-400 leading-relaxed">
-                    Try adjusting your search terms or selecting a different filter to find the perfect AI agent for your needs.
+                    {selectedFilter === 'all' 
+                      ? "No new agents available for purchase. Check back later for more options!"
+                      : "Try adjusting your search terms or selecting a different filter to find the perfect AI agent for your needs."
+                    }
                   </p>
                 </div>
               </div>
             )}
 
-            {/* Agent count info */}
             {!loading && (
               <div className="mt-12 text-center">
                 <p className="text-gray-500 text-sm">
-                  {selectedFilter === 'all' && `${apiAgents.length} community agents • ${featuredAgents.length} featured agents`}
+                  {selectedFilter === 'all' && `${filteredAgents.length} agents available for purchase`}
                   {selectedFilter === 'owned' && `${ownedAgents.length} owned agents`}
                   {selectedFilter === 'created' && `${createdAgents.length} created agents`}
                 </p>
@@ -543,7 +893,7 @@ const MarketplacePage = () => {
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default MarketplacePage
+export default MarketplacePage;
