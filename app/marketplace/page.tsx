@@ -39,6 +39,11 @@ const MarketplacePage = () => {
   const isBlockchainProcessing = isApproving || isRenting || isConfirmingRent;
   
   // --- This useEffect triggers the rentAgent call AFTER the approval is confirmed ---
+
+  useEffect(()=>{
+
+  },[])
+
   useEffect(() => {
     if (isApprovalConfirmed && selectedAgent) {
       // Check if agentId is a valid number (not undefined, null, etc.)
@@ -118,7 +123,8 @@ const MarketplacePage = () => {
     console.log("2️⃣ Updating backend after successful payment...");
     try {
       const payload = {
-        agentId: selectedAgent.agentId,
+        // agentId: selectedAgent.agentId,
+        agentId: selectedAgent.id,
         buyerWalletAddress: userAddress
       };
       
@@ -262,7 +268,7 @@ const MarketplacePage = () => {
     id: agent.id, 
     
     // The ON-CHAIN ID from the blockchain, used for payments
-    agentId: agent.onChainAgentId, 
+    agentId: agent.agentId, 
 
     name: agent.name,
     description: agent.description,
