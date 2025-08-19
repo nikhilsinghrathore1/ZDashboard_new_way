@@ -9,23 +9,25 @@ import AgentPlatformABI from '../contracts/AgentPlatform.json';
 import ERC20ABI from '../contracts/erc20_abi.json';
 import { agentPlatformAddress, yourTokenAddress } from '../contracts/addresses';
 
+// ADD THIS TYPE DEFINITION HERE
+type DeploymentStatus = 'idle' | 'approving' | 'deploying' | 'saving';
+
 // A constant for the deployment fee. You can get this from your backend or set it here.
 const DEPLOYMENT_FEE = "10"; // Example: 10 ZLAG tokens
-
 
 const AgentCreationPage = () => {
   const router = useRouter();
   const { address, isConnected } = useAccount();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false); 
+  const [deploymentStatus, setDeploymentStatus] = useState<DeploymentStatus>('idle');
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     personality: 'professional',
     responseStyle: 'detailed',
-    price: 10.99,
-    isForSale: true
+    price: 10, // Fixed price - always 10 ZLAG
+    isForSale: true // Always true - all agents are buyable
   });
 
   // --- WAGMI HOOKS FOR DEPLOYMENT PAYMENT ---
@@ -38,10 +40,10 @@ const AgentCreationPage = () => {
   // Combine all blockchain processing states
   const isBlockchainProcessing = isApproving || isDeploying || isConfirmingDeploy;
 
-
   // --- This useEffect triggers the deployAgent call AFTER the approval is confirmed ---
   useEffect(() => {
     if (isApprovalConfirmed) {
+      setDeploymentStatus('deploying'); // ADDED this line
       console.log("✅ Approval confirmed! Now calling deployAgent...");
       const feeInWei = ethers.parseUnits(DEPLOYMENT_FEE, 18);
       
@@ -54,7 +56,7 @@ const AgentCreationPage = () => {
       }).catch(err => {
         console.error("❌ Deploy agent call failed after approval", err);
         setError("Payment failed at the deployment step. Please try again.");
-        setIsLoading(false); // Stop the full-page loader on error
+        setDeploymentStatus('idle'); // CHANGED from setIsLoading(false)
       });
     }
   }, [isApprovalConfirmed, deployAgent]);
@@ -91,7 +93,7 @@ const AgentCreationPage = () => {
       return;
     }
     
-    setIsLoading(true); // Show the full-page loader
+    setDeploymentStatus('approving'); // CHANGED from setIsLoading(true)
     setError('');
     resetApprove();
     resetDeploy();
@@ -110,25 +112,26 @@ const AgentCreationPage = () => {
     } catch (err) {
       console.error("❌ Approval transaction failed to send:", err);
       setError("Failed to initiate payment. Please check your wallet and try again.");
-      setIsLoading(false); // Stop loader on error
+      setDeploymentStatus('idle'); // CHANGED from setIsLoading(false)
     }
   };
 
   // --- This function sends the data to your backend AFTER payment is successful ---
-  const handleSaveToBackend = async (onChainAgentId: string) => { // <-- It now receives the on-chain ID
+  const handleSaveToBackend = async (onChainAgentId: string) => {
+      setDeploymentStatus('saving'); // Keep the loader active with the "saving" message
     console.log(`2️⃣ Saving agent (ON-CHAIN ID: ${onChainAgentId}) to backend...`);
     try {
-      // --- CHANGE 1: RE-ADD getCapabilities to the payload ---
+      // Updated payload with agentId field name to match your expected format
       const payload = {
         name: formData.name,
         description: formData.description,
         model: "GPT-4",
         capabilities: getCapabilities(formData.personality, formData.responseStyle),
-        price: formData.price,
-        isForSale: formData.isForSale,
+        price: 10, // Fixed price - always 10 ZLAG
+        isForSale: true, // Always true - all agents are buyable
         creatorWalletAddress: address,
-        // --- CHANGE 2: SEND THE BLOCKCHAIN ID TO YOUR BACKEND ---
-        onChainAgentId: parseInt(onChainAgentId, 10) 
+        // Changed from onChainAgentId to agentId to match your expected format
+        agentId: parseInt(onChainAgentId, 10) 
       };
       
       const response = await fetch('https://zlag-ownable-service.vercel.app/api/agents', {
@@ -137,20 +140,20 @@ const AgentCreationPage = () => {
         body: JSON.stringify(payload)
       });
 
+
       if (!response.ok) throw new Error('Backend failed to save the agent.');
 
       const responseData = await response.json();
       console.log('✅ Agent saved successfully to backend:', responseData);
       
-      // --- CHANGE 3: REDIRECT USING THE DATABASE ID FROM THE RESPONSE ---
+      // Redirect using the database ID from the response
       const databaseId = responseData.agent.id;
       router.push(`/agent/${databaseId}`);
 
     } catch (err: any) {
       console.error('Error saving agent to backend:', err);
       setError(err.message || 'Payment succeeded, but failed to save agent data. Please contact support.');
-    } finally {
-      setIsLoading(false); // Hide the full-page loader
+      setDeploymentStatus('idle'); // CHANGED from setIsLoading(false)
     }
   };
 
@@ -179,28 +182,6 @@ const AgentCreationPage = () => {
     if (error) setError('');
   };
   
-  const handlePriceChange = (e: any) => {
-    const value = e.target.value;
-    setFormData({
-      ...formData,
-      price: value === '' ? 0 : parseFloat(value) || 0
-    });
-    // Clear error when user starts typing
-    if (error) setError('');
-  };
-  
-  // Then in your JSX, use the separate handler for price:
-  <input
-    type="number"
-    name="price"
-    value={formData.price}
-    onChange={handlePriceChange}  // Use separate handler
-    step="0.01"
-    min="0"
-    className="w-full px-4 py-4 bg-black/50 border border-purple-500/50 rounded-xl text-white placeholder-gray-500 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 focus:outline-none transition-all duration-200"
-    placeholder="10.99"
-  />
-
   // Function to map personality and response style to capabilities
   const getCapabilities = (personality: string, responseStyle: string) => {
     const capabilityMap: { [key: string]: string[] } = {
@@ -226,126 +207,143 @@ const AgentCreationPage = () => {
     return Array.from(new Set([...personalityCapabilities, ...styleCapabilities]));
   };
 
-  const handleCreateAgent = async (e: any) => {
-    e.preventDefault();
+  // const handleCreateAgent = async (e: any) => {
+  //   e.preventDefault();
     
-    // Check if wallet is connected
-    if (!isConnected || !address) {
-      setError('Please connect your wallet before creating an agent');
-      return;
-    }
+  //   // Check if wallet is connected
+  //   if (!isConnected || !address) {
+  //     setError('Please connect your wallet before creating an agent');
+  //     return;
+  //   }
 
-    if (!formData.name || !formData.description) {
-      setError('Please fill in all required fields');
-      return;
-    }
+  //   if (!formData.name || !formData.description) {
+  //     setError('Please fill in all required fields');
+  //     return;
+  //   }
     
-    setIsLoading(true);
-    setError('');
+  //   setIsLoading(true);
+  //   setError('');
 
-    try {
-      // Prepare the payload according to backend expectations
-      const payload = {
-        name: formData.name,
-        description: formData.description,
-        model: "GPT-4",
-        capabilities: getCapabilities(formData.personality, formData.responseStyle),
-        price: typeof formData.price === 'string' ? parseFloat(formData.price) : formData.price, // Convert string to number
-        isForSale: formData.isForSale,
-        creatorWalletAddress: address
-      };
+  //   try {
+  //     // Prepare the payload according to backend expectations
+  //     const payload = {
+  //       name: formData.name,
+  //       description: formData.description,
+  //       model: "GPT-4",
+  //       capabilities: getCapabilities(formData.personality, formData.responseStyle),
+  //       price: 10, // Fixed price - always 10 ZLAG
+  //       isForSale: true, // Always true - all agents are buyable
+  //       creatorWalletAddress: address
+  //     };
       
+  //     console.log("this is the payload: ", payload); 
+  //     console.log('Sending payload:', payload);
 
-      console.log("this is the payload: ", payload); 
-      console.log('Sending payload:', payload);
+  //     const response = await fetch('https://zlag-ownable-service.vercel.app/api/agents', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify(payload)
+  //     });
 
-      const response = await fetch('https://zlag-ownable-service.vercel.app/api/agents', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload)
-      });
+  //     if (!response.ok) {
+  //       const errorData = await response.json();
+  //       throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+  //     }
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-      }
-
-      const responseData = await response.json();
-      console.log('Agent created successfully:', responseData);
+  //     const responseData = await response.json();
+  //     console.log('Agent created successfully:', responseData);
       
-      // Handle the response structure based on the API response format
-      // Response structure: { success: true, agent: { id: 1, ... } }
-      if (responseData.success && responseData.agent) {
-        const agentId = responseData.agent.id;
+  //     // Handle the response structure based on the API response format
+  //     // Response structure: { success: true, agent: { id: 1, ... } }
+  //     if (responseData.success && responseData.agent) {
+  //       const agentId = responseData.agent.id;
         
-        if (agentId) {
-          // Close modal and reset form
-          setIsModalOpen(false);
-          setFormData({
-            name: '',
-            description: '',
-            personality: 'professional',
-            responseStyle: 'detailed',
-            price: 10.99,
-            isForSale: true
-          });
+  //       if (agentId) {
+  //         // Close modal and reset form
+  //         setIsModalOpen(false);
+  //         setFormData({
+  //           name: '',
+  //           description: '',
+  //           personality: 'professional',
+  //           responseStyle: 'detailed',
+  //           price: 10, // Fixed price
+  //           isForSale: true // Always true
+  //         });
           
-          // Redirect to the agent page
-          router.push(`/agent/${agentId}`);
-        } else {
-          console.warn('No agent ID returned from backend');
-          setError('Agent created but no ID returned. Please check the agents list.');
-          setIsLoading(false);
-        }
-      } else {
-        console.warn('Unexpected response format:', responseData);
-        setError('Agent may have been created but response format was unexpected.');
-        setIsLoading(false);
-      }
+  //         // Redirect to the agent page
+  //         router.push(`/agent/${agentId}`);
+  //       } else {
+  //         console.warn('No agent ID returned from backend');
+  //         setError('Agent created but no ID returned. Please check the agents list.');
+  //         setIsLoading(false);
+  //       }
+  //     } else {
+  //       console.warn('Unexpected response format:', responseData);
+  //       setError('Agent may have been created but response format was unexpected.');
+  //       setIsLoading(false);
+  //     }
 
-    } catch (error: any) {
-      console.error('Error creating agent:', error);
-      setError(error.message || 'Failed to create agent. Please try again.');
-      setIsLoading(false);
-    }
-  };
+  //   } catch (error: any) {
+  //     console.error('Error creating agent:', error);
+  //     setError(error.message || 'Failed to create agent. Please try again.');
+  //     setIsLoading(false);
+  //   }
+  // };
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setError('');
-    setFormData({
-      name: '',
-      description: '',
-      personality: 'professional',
-      responseStyle: 'detailed',
-      price: 10.99,
-      isForSale: true
-    });
-  };
+  // const closeModal = () => {
+  //   setIsModalOpen(false);
+  //   setError('');
+  //   setFormData({
+  //     name: '',
+  //     description: '',
+  //     personality: 'professional',
+  //     responseStyle: 'detailed',
+  //     price: 10, // Fixed price
+  //     isForSale: true // Always true
+  //   });
+  // };
 
-  if (isLoading) {
+  // This condition now checks if you are in ANY loading state, not just 'idle'
+  if (deploymentStatus !== 'idle') {
+    const statusMessages: { [key: string]: string } = {
+      approving: 'Step 1/3: Awaiting approval in your wallet...',
+      deploying: 'Step 2/3: Deploying agent to the blockchain... (This may take a moment)',
+      saving: 'Step 3/3: Finalizing and saving agent...',
+    };
+    
+    const blockExplorerUrl = 'https://sepolia.etherscan.io/tx/'; // Change if you use a different network
+
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center overflow-hidden starfield">
-        <div className="text-center relative z-10">
+      <div className="min-h-screen bg-black flex items-center justify-center overflow-hidden">
+        <div className="text-center relative z-10 p-4">
           <div className="relative mb-8">
             <div className="w-32 h-32 mx-auto border-4 border-purple-400 border-t-transparent rounded-full animate-spin shadow-lg shadow-purple-400/50"></div>
-            <div className="absolute inset-0 w-32 h-32 mx-auto border-2 border-purple-300 border-b-transparent rounded-full animate-spin animation-delay-150 shadow-md shadow-purple-300/30"></div>
+            <div className="absolute inset-0 w-32 h-32 mx-auto border-2 border-purple-300 border-b-transparent rounded-full animate-spin" style={{ animationDelay: '150ms', animationDuration: '1.5s' }}></div>
           </div>
-          <div className="text-purple-400 text-xl font-medium mb-4 animate-pulse">
-            Deploying Agent...
+          <div className="text-purple-300 text-xl font-medium mb-4 animate-pulse">
+            {statusMessages[deploymentStatus] || 'Processing...'}
           </div>
-          <div className="text-purple-300 text-sm opacity-70">
-            Storing neural pathways to database...
+          <div className="text-purple-400 text-sm opacity-70 mt-8 space-y-2">
+            {/* Show link to track the approval transaction */}
+            {approveHash && (
+              <div>
+                <a href={`${blockExplorerUrl}${approveHash}`} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                  Track Approval Transaction
+                </a>
+              </div>
+            )}
+            {/* Show link to track the deployment transaction */}
+            {deployHash && (
+              <div>
+                <a href={`${blockExplorerUrl}${deployHash}`} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                  Track Deployment Transaction
+                </a>
+              </div>
+            )}
           </div>
         </div>
-        <style jsx>{`
-          .animation-delay-150 {
-            animation-delay: 150ms;
-            animation-duration: 1.5s;
-          }
-        `}</style>
       </div>
     );
   }
@@ -547,7 +545,7 @@ const AgentCreationPage = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div 
             className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-            onClick={closeModal}
+            onClick={() => setIsModalOpen(false)}
           ></div>
           
           <div className="relative bg-gray-900/90 border border-purple-500/50 rounded-2xl shadow-2xl shadow-purple-600/20 w-full max-w-lg max-h-[90vh] overflow-y-auto backdrop-blur-sm">
@@ -555,11 +553,11 @@ const AgentCreationPage = () => {
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-3xl font-bold text-purple-400">Neural Configuration</h2>
                 <button
-                  onClick={closeModal}
-                  className="text-gray-400 hover:text-purple-400 text-3xl transition-colors duration-200"
-                >
-                  ×
-                </button>
+                onClick={() => setIsModalOpen(false)}
+                className="text-gray-400 hover:text-purple-400 text-3xl transition-colors duration-200"
+              >
+                ×
+              </button>
               </div>
 
               {/* Error Message */}
@@ -602,33 +600,11 @@ const AgentCreationPage = () => {
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-3">
-                      Agent Price (Zlag)
-                    </label>
-                    <input
-                      type="number"
-                      name="price"
-                      value={formData.price}
-                      onChange={handlePriceChange}
-                      step="0.01"
-                      min="0"
-                      className="w-full px-4 py-4 bg-black/50 border border-purple-500/50 rounded-xl text-white placeholder-gray-500 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 focus:outline-none transition-all duration-200"
-                      placeholder="10.99"
-                    />
-                  </div>
-
-                  <div className="flex items-center space-x-3">
-                    <input
-                      type="checkbox"
-                      name="isForSale"
-                      checked={formData.isForSale}
-                      onChange={(e) => setFormData({...formData, isForSale: e.target.checked})}
-                      className="w-5 h-5 text-purple-600 bg-black/50 border border-purple-500/50 rounded focus:ring-purple-400 focus:ring-2"
-                    />
-                    <label className="text-sm font-medium text-gray-300">
-                      Make agent available for purchase
-                    </label>
+                  {/* Fixed Price Display */}
+                  <div className="p-4 bg-purple-600/10 border border-purple-500/30 rounded-xl">
+                    <div className="text-sm font-medium text-purple-300 mb-2">Agent Price:</div>
+                    <div className="text-2xl font-bold text-white">10 ZLAG</div>
+                    <div className="text-xs text-gray-400">Fixed pricing - all agents are available for purchase</div>
                   </div>
                 </div>
 
@@ -696,15 +672,18 @@ const AgentCreationPage = () => {
                 <div className="pt-8 border-t border-purple-500/30">
                   <button
                     type="submit"
-                     disabled={!formData.name || !formData.description || isBlockchainProcessing || isLoading || !isConnected}
+                    // The button is disabled if the process has started, or if the form is incomplete, or wallet not connected.
+                    disabled={deploymentStatus !== 'idle' || !formData.name || !formData.description || !isConnected}
                     className="w-full px-8 py-5 bg-purple-600 text-white font-semibold rounded-xl hover:bg-purple-500 transition-all duration-300 hover:shadow-xl hover:shadow-purple-600/30 focus:outline-none focus:ring-4 focus:ring-purple-400/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-lg"
                   >
-                    {isBlockchainProcessing ? (
+                    {/* @ts-ignore */}
+                    {deploymentStatus === 'approving' || deploymentStatus === 'deploying' ? (
                       <>
-                      <div className="w-6 h-6 mr-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Processing Payment...
+                        <div className="w-6 h-6 mr-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Processing Payment...
                       </>
-                    ) : isLoading ? (
+                      // @ts-ignore
+                    ) : deploymentStatus === 'saving' ? (
                       <>
                         <div className="w-6 h-6 mr-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                         Saving to Backend...
