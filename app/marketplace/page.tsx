@@ -260,7 +260,7 @@ const MarketplacePage = () => {
 
     name: agent.name,
     description: agent.description,
-    price: agent.price ? `${agent.price} Zlag` : "Free", // Changed to Zlag for consistency
+    price: agent.price ? `${agent.price} Zlag` : "50 Zlag",
     rating: (4.0 + Math.random() * 1.0),
     users: `${(Math.random() * 10 + 1).toFixed(1)}k`,
     downloads: `${(Math.random() * 30 + 5).toFixed(1)}k`,
@@ -273,159 +273,70 @@ const MarketplacePage = () => {
     createdByUser: isCreated,
     liked: Math.random() > 0.5,
     redirectUrl: `/agent/${agent.id}`,
-    //  @ts-ignore
-    agentId: agent.id
-  })
+    isFree: agent.price === 0 || agent.price === 'Free' // Check if it's free
+  });
 
-  // Enhanced handleBuyAgent function
-  const handleBuyAgent = async () => {
-    if (!selectedAgent || !userAddress) {
-      console.error("❌ Missing required data:", {
-        selectedAgent: selectedAgent ? "exists" : "null",
-        userAddress: userAddress ? "exists" : "null"
-      });
-      setPurchaseError("No agent selected or wallet not connected.");
-      return;
-    }
-
-    // Check for valid agentId
-    if (!selectedAgent.agentId && selectedAgent.agentId !== 0) {
-      console.error("❌ Invalid agentId:", selectedAgent.agentId);
-      setPurchaseError("Invalid agent ID. Please try selecting the agent again.");
-      return;
-    }
-
-    try {
-      //  @ts-ignore
-      setPurchasing(true);
-      setPurchaseError(null);
-
-      const payload = {
-        agentId: selectedAgent.agentId,
-        buyerWalletAddress: userAddress
-      };
-
-      console.log("🚀 Attempting to purchase agent with payload:", payload);
-      console.log("🔍 Agent details:", {
-        id: selectedAgent.id,
-        name: selectedAgent.name,
-        agentId: selectedAgent.agentId,
-        price: selectedAgent.price
-      });
-
-      const response = await fetch('https://zlag-ownable-service.vercel.app/api/agents/buy', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload)
-      });
-
-      console.log(`📡 Response status: ${response.status} (${response.statusText})`);
-      console.log("📡 Response headers:", Object.fromEntries(response.headers));
-
-      if (!response.ok) {
-        let errorMessage;
-        try {
-          const errorData = await response.json();
-          console.error("❌ Server error response (JSON):", errorData);
-          errorMessage = errorData.message || errorData.error || `HTTP ${response.status}: ${response.statusText}`;
-        } catch {
-          const errorText = await response.text();
-          console.error("❌ Server error response (TEXT):", errorText);
-          errorMessage = errorText || `HTTP ${response.status}: ${response.statusText}`;
-        }
-        
-        setPurchaseError(`Server error (${response.status}): ${errorMessage}`);
-        return;
-      }
-
-      const result = await response.json();
-      console.log("✅ Purchase API response:", result);
-
-      if (result.success) {
-        console.log("🎉 Purchase successful!");
-        setPurchaseSuccess(true);
-        
-        if (result.agent) {
-          const updatedAgent = transformApiAgent(result.agent, true, false);
-          setOwnedAgents(prev => [...prev, updatedAgent]);
-          setApiAgents(prev => prev.filter(agent => agent.agentId !== selectedAgent.agentId));
-          console.log("✅ Agent moved to owned list");
-        }
-        
-        setTimeout(() => {
-          setShowPurchaseModal(false);
-          setSelectedAgent(null);
-          setPurchaseSuccess(false);
-        }, 2000);
-        
-      } else {
-        console.error("❌ Purchase failed:", result.message);
-        setPurchaseError(result.message || 'Purchase failed - server returned error');
-      }
-    } catch (error) {
-      console.error("❌ Network/unexpected error:", error);
-      
-      if (error.name === 'TypeError' && error.message.includes('fetch')) {
-        setPurchaseError('Network connection failed. Please check your internet connection.');
-      } else if (error.name === 'SyntaxError' && error.message.includes('JSON')) {
-        setPurchaseError('Invalid response from server. Please try again.');
-      } else {
-        setPurchaseError(`Unexpected error: ${error.message}`);
-      }
-    } finally {
-      //  @ts-ignore
-      setPurchasing(false);
-    }
-  }
-
-  // Fetch agents from different APIs
+  
+  // --- CORRECTED useEffect HOOK ---
   useEffect(() => {
+    // If no wallet is connected, clear the lists and stop.
     if (!isConnected || !userAddress) {
+      setApiAgents([]);
+      setOwnedAgents([]);
+      setCreatedAgents([]);
       setLoading(false);
       return;
     }
 
-    const fetchAgents = async () => {
+
+  const fetchAgents = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const [generalResponse, ownedResponse, createdResponse] = await Promise.allSettled([
-          fetch('https://create-agent-backend.vercel.app/agents/'),
+        // Fetch all agents, owned agents, and created agents
+        const [generalResponse, ownedResponse, createdResponse] = await Promise.all([
+          fetch('https://zlag-ownable-service.vercel.app/api/agents'), // Fetch all agents from your backend
           fetch(`https://zlag-ownable-service.vercel.app/api/users/${userAddress}/owned-agents`),
           fetch(`https://zlag-ownable-service.vercel.app/api/users/${userAddress}/created-agents`)
         ]);
 
-        if (generalResponse.status === 'fulfilled' && generalResponse.value.ok) {
-          const generalResult = await generalResponse.value.json();
-          if (generalResult.success) {
-            const transformedAgents = generalResult.data.map(agent => transformApiAgent(agent));
-            setApiAgents(transformedAgents);
-          }
-        }
+        let allAgentsData = [];
+        let ownedAgentIds = new Set();
+        let createdAgentCreatorAddresses = new Set();
 
-        if (ownedResponse.status === 'fulfilled' && ownedResponse.value.ok) {
-          const ownedResult = await ownedResponse.value.json();
+        // Process owned agents first
+        if (ownedResponse.ok) {
+          const ownedResult = await ownedResponse.json();
           if (ownedResult.success) {
             const transformedOwned = ownedResult.agents.map(agent => transformApiAgent(agent, true, false));
             setOwnedAgents(transformedOwned);
+            transformedOwned.forEach(agent => ownedAgentIds.add(agent.id));
           }
         }
 
-        if (createdResponse.status === 'fulfilled' && createdResponse.value.ok) {
-          const createdResult = await createdResponse.value.json();
+        // Process created agents
+        if (createdResponse.ok) {
+          const createdResult = await createdResponse.json();
           if (createdResult.success) {
             const transformedCreated = createdResult.agents.map(agent => transformApiAgent(agent, false, true));
             setCreatedAgents(transformedCreated);
+            transformedCreated.forEach(agent => createdAgentCreatorAddresses.add(agent.creator));
           }
         }
 
-        if (generalResponse.status === 'rejected' && 
-            ownedResponse.status === 'rejected' && 
-            createdResponse.status === 'rejected') {
-          setError('Failed to connect to servers');
+        // Process all agents and filter out the ones already owned
+        if (generalResponse.ok) {
+          const generalResult = await generalResponse.json();
+          if (generalResult.success) {
+            allAgentsData = generalResult.agents
+              .filter(agent => !ownedAgentIds.has(agent.id)) // Don't show owned agents in the main list
+              .map(agent => {
+                const isCreated = agent.creatorWalletAddress === userAddress;
+                return transformApiAgent(agent, false, isCreated);
+              });
+            setApiAgents(allAgentsData);
+          }
         }
 
       } catch (err) {
@@ -437,34 +348,38 @@ const MarketplacePage = () => {
     };
 
     fetchAgents();
+  // --- THE CRUCIAL FIX ---
+  // This dependency array ensures the data re-fetches when the wallet address changes.
   }, [userAddress, isConnected]);
 
-  // Updated: Get filtered agents based on selected filter - excludes owned agents from 'all'
+
+// --- CORRECTED FILTERING LOGIC ---
   const getFilteredAgents = () => {
     let agentsToShow = [];
     
     switch (selectedFilter) {
       case 'owned':
+        // Filter the ownedAgents list based on the user's wallet
         agentsToShow = ownedAgents;
         break;
       case 'created':
-        agentsToShow = createdAgents;
+        // Filter all created agents to show only the ones made by the current user
+        agentsToShow = createdAgents.filter(agent => agent.creator === userAddress);
         break;
       default:
-        // For 'all' filter: exclude agents that are already owned
-        const ownedAgentIds = new Set(ownedAgents.map(agent => agent.agentId));
-        agentsToShow = [
-          ...featuredAgents.filter(agent => !ownedAgentIds.has(agent.agentId)),
-          ...apiAgents.filter(agent => !ownedAgentIds.has(agent.agentId))
-        ];
+        // For 'all', show featured and API agents
+        const allAvailableAgents = [...featuredAgents, ...apiAgents];
+        // Ensure we don't show agents created by the current user unless they are also for sale
+        agentsToShow = allAvailableAgents.filter(agent => agent.creator !== userAddress);
         break;
     }
 
-    return agentsToShow.filter(agent => {
-      return agent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-             agent.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-             agent.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-    });
+    // Apply the search term to the already filtered list
+    return agentsToShow.filter(agent =>
+      agent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      agent.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (agent.tags && agent.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())))
+    );
   };
 
   const filteredAgents = getFilteredAgents();

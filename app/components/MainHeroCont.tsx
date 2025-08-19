@@ -89,7 +89,7 @@ const MainHeroCont = () => {
     >
       {/* Starry background */}
       <div className="absolute inset-0 pointer-events-none">
-        {[...Array(80)].map((_, i) => (
+        {[...Array(40)].map((_, i) => (
           <div 
             key={`star-${i}`}
             className="absolute rounded-full"

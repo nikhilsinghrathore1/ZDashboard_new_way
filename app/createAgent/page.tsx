@@ -12,7 +12,6 @@ import { agentPlatformAddress, yourTokenAddress } from '../contracts/addresses';
 // A constant for the deployment fee. You can get this from your backend or set it here.
 const DEPLOYMENT_FEE = "10"; // Example: 10 ZLAG tokens
 
-
 const AgentCreationPage = () => {
   const router = useRouter();
   const { address, isConnected } = useAccount();
@@ -24,8 +23,8 @@ const AgentCreationPage = () => {
     description: '',
     personality: 'professional',
     responseStyle: 'detailed',
-    price: 10.99,
-    isForSale: true
+    price: 10, // Fixed price - always 10 ZLAG
+    isForSale: true // Always true - all agents are buyable
   });
 
   // --- WAGMI HOOKS FOR DEPLOYMENT PAYMENT ---
@@ -37,7 +36,6 @@ const AgentCreationPage = () => {
   
   // Combine all blockchain processing states
   const isBlockchainProcessing = isApproving || isDeploying || isConfirmingDeploy;
-
 
   // --- This useEffect triggers the deployAgent call AFTER the approval is confirmed ---
   useEffect(() => {
@@ -115,20 +113,20 @@ const AgentCreationPage = () => {
   };
 
   // --- This function sends the data to your backend AFTER payment is successful ---
-  const handleSaveToBackend = async (onChainAgentId: string) => { // <-- It now receives the on-chain ID
+  const handleSaveToBackend = async (onChainAgentId: string) => {
     console.log(`2️⃣ Saving agent (ON-CHAIN ID: ${onChainAgentId}) to backend...`);
     try {
-      // --- CHANGE 1: RE-ADD getCapabilities to the payload ---
+      // Updated payload with agentId field name to match your expected format
       const payload = {
         name: formData.name,
         description: formData.description,
         model: "GPT-4",
         capabilities: getCapabilities(formData.personality, formData.responseStyle),
-        price: formData.price,
-        isForSale: formData.isForSale,
+        price: 10, // Fixed price - always 10 ZLAG
+        isForSale: true, // Always true - all agents are buyable
         creatorWalletAddress: address,
-        // --- CHANGE 2: SEND THE BLOCKCHAIN ID TO YOUR BACKEND ---
-        onChainAgentId: parseInt(onChainAgentId, 10) 
+        // Changed from onChainAgentId to agentId to match your expected format
+        agentId: parseInt(onChainAgentId, 10) 
       };
       
       const response = await fetch('https://zlag-ownable-service.vercel.app/api/agents', {
@@ -142,7 +140,7 @@ const AgentCreationPage = () => {
       const responseData = await response.json();
       console.log('✅ Agent saved successfully to backend:', responseData);
       
-      // --- CHANGE 3: REDIRECT USING THE DATABASE ID FROM THE RESPONSE ---
+      // Redirect using the database ID from the response
       const databaseId = responseData.agent.id;
       router.push(`/agent/${databaseId}`);
 
@@ -179,28 +177,6 @@ const AgentCreationPage = () => {
     if (error) setError('');
   };
   
-  const handlePriceChange = (e: any) => {
-    const value = e.target.value;
-    setFormData({
-      ...formData,
-      price: value === '' ? 0 : parseFloat(value) || 0
-    });
-    // Clear error when user starts typing
-    if (error) setError('');
-  };
-  
-  // Then in your JSX, use the separate handler for price:
-  <input
-    type="number"
-    name="price"
-    value={formData.price}
-    onChange={handlePriceChange}  // Use separate handler
-    step="0.01"
-    min="0"
-    className="w-full px-4 py-4 bg-black/50 border border-purple-500/50 rounded-xl text-white placeholder-gray-500 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 focus:outline-none transition-all duration-200"
-    placeholder="10.99"
-  />
-
   // Function to map personality and response style to capabilities
   const getCapabilities = (personality: string, responseStyle: string) => {
     const capabilityMap: { [key: string]: string[] } = {
@@ -250,12 +226,11 @@ const AgentCreationPage = () => {
         description: formData.description,
         model: "GPT-4",
         capabilities: getCapabilities(formData.personality, formData.responseStyle),
-        price: typeof formData.price === 'string' ? parseFloat(formData.price) : formData.price, // Convert string to number
-        isForSale: formData.isForSale,
+        price: 10, // Fixed price - always 10 ZLAG
+        isForSale: true, // Always true - all agents are buyable
         creatorWalletAddress: address
       };
       
-
       console.log("this is the payload: ", payload); 
       console.log('Sending payload:', payload);
 
@@ -288,8 +263,8 @@ const AgentCreationPage = () => {
             description: '',
             personality: 'professional',
             responseStyle: 'detailed',
-            price: 10.99,
-            isForSale: true
+            price: 10, // Fixed price
+            isForSale: true // Always true
           });
           
           // Redirect to the agent page
@@ -320,8 +295,8 @@ const AgentCreationPage = () => {
       description: '',
       personality: 'professional',
       responseStyle: 'detailed',
-      price: 10.99,
-      isForSale: true
+      price: 10, // Fixed price
+      isForSale: true // Always true
     });
   };
 
@@ -602,33 +577,11 @@ const AgentCreationPage = () => {
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-3">
-                      Agent Price (Zlag)
-                    </label>
-                    <input
-                      type="number"
-                      name="price"
-                      value={formData.price}
-                      onChange={handlePriceChange}
-                      step="0.01"
-                      min="0"
-                      className="w-full px-4 py-4 bg-black/50 border border-purple-500/50 rounded-xl text-white placeholder-gray-500 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 focus:outline-none transition-all duration-200"
-                      placeholder="10.99"
-                    />
-                  </div>
-
-                  <div className="flex items-center space-x-3">
-                    <input
-                      type="checkbox"
-                      name="isForSale"
-                      checked={formData.isForSale}
-                      onChange={(e) => setFormData({...formData, isForSale: e.target.checked})}
-                      className="w-5 h-5 text-purple-600 bg-black/50 border border-purple-500/50 rounded focus:ring-purple-400 focus:ring-2"
-                    />
-                    <label className="text-sm font-medium text-gray-300">
-                      Make agent available for purchase
-                    </label>
+                  {/* Fixed Price Display */}
+                  <div className="p-4 bg-purple-600/10 border border-purple-500/30 rounded-xl">
+                    <div className="text-sm font-medium text-purple-300 mb-2">Agent Price:</div>
+                    <div className="text-2xl font-bold text-white">10 ZLAG</div>
+                    <div className="text-xs text-gray-400">Fixed pricing - all agents are available for purchase</div>
                   </div>
                 </div>
 
