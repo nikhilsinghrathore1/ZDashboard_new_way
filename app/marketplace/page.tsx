@@ -37,10 +37,30 @@ const MarketplacePage = () => {
   const { isSuccess: isRentConfirmed, isLoading: isConfirmingRent } = useWaitForTransactionReceipt({ hash: rentHash });
   
   const isBlockchainProcessing = isApproving || isRenting || isConfirmingRent;
+
+   // NEW useEffect: Handles clearing data ONLY on disconnect.
+  useEffect(() => {
+    if (!isConnected) {
+      setApiAgents([]);
+      setOwnedAgents([]);
+      setCreatedAgents([]);
+    }
+  }, [isConnected]);
   
   // --- This useEffect triggers the rentAgent call AFTER the approval is confirmed ---
+
+  useEffect(()=>{
+
+  },[])
+
   useEffect(() => {
     if (isApprovalConfirmed && selectedAgent) {
+      // Check if agentId is a valid number (not undefined, null, etc.)
+      if (typeof selectedAgent.agentId !== 'number' && typeof selectedAgent.agentId !== 'string') {
+          console.error("❌ CRITICAL: Attempted to rent with an invalid agentId.", selectedAgent);
+          setPurchaseError("Purchase failed: Agent ID is missing or invalid. Please contact support.");
+          return; // Stop execution
+      }
       console.log("✅ Approval confirmed! Now calling rentAgent...");
       const numericPrice = selectedAgent.price.split(' ')[0];
       const amountInWei = ethers.parseUnits(numericPrice, 18);
@@ -112,9 +132,13 @@ const MarketplacePage = () => {
     console.log("2️⃣ Updating backend after successful payment...");
     try {
       const payload = {
-        agentId: selectedAgent.agentId,
-        buyerWalletAddress: userAddress
+        agentId: selectedAgent.id,
+        buyerWalletAddress: userAddress,
+        onchainAgentid : selectedAgent.agentId
       };
+
+      console.log("this is the updated payload : " ,payload)
+
       
       const response = await fetch('https://zlag-ownable-service.vercel.app/api/agents/buy', {
         method: 'POST',
@@ -251,45 +275,83 @@ const MarketplacePage = () => {
   }
 
   // Transform API agents to match our format
-  const transformApiAgent = (agent, isOwned = false, isCreated = false) => ({
-    // The DATABASE ID, used for keys and URL links
-    id: agent.id, 
+  // const transformApiAgent = (agent, isOwned = false, isCreated = false) => ({
+  //   // The DATABASE ID, used for keys and URL links
+  //   id: agent.id, 
     
-    // The ON-CHAIN ID from the blockchain, used for payments
-    agentId: agent.onChainAgentId, 
+  //   // The ON-CHAIN ID from the blockchain, used for payments
+  //   agentId: agent.agentId, 
 
-    name: agent.name,
-    description: agent.description,
-    price: agent.price ? `${agent.price} Zlag` : "50 Zlag",
-    rating: (4.0 + Math.random() * 1.0),
-    users: `${(Math.random() * 10 + 1).toFixed(1)}k`,
-    downloads: `${(Math.random() * 30 + 5).toFixed(1)}k`,
-    trending: Math.random() > 0.7,
-    creator: agent.creator ? agent.creator.walletAddress.slice(0, 8) + '...' : "Community",
-    tags: agent.capabilities ? agent.capabilities.slice(0, 3) : ['AI', 'Bot', 'Helper'],
-    icon: getIconForCapabilities(agent.capabilities || []),
-    color: getColorForCapabilities(agent.capabilities || []),
-    owned: isOwned,
-    createdByUser: isCreated,
-    liked: Math.random() > 0.5,
-    redirectUrl: `/agent/${agent.id}`,
-    isFree: agent.price === 0 || agent.price === 'Free' // Check if it's free
-  });
+  //   name: agent.name,
+  //   description: agent.description,
+  //   price: agent.price ? `${agent.price} Zlag` : "50 Zlag",
+
+  //   // NEW: Store the FULL creator address for filtering and logic
+  //   creatorAddress: agent.creator ? agent.creator.walletAddress : null,
+
+  //   // KEEP: The shortened address for display purposes only
+  //   creator: agent.creator ? agent.creator.walletAddress.slice(0, 8) + '...' : "Community",
+    
+  //   rating: (4.0 + Math.random() * 1.0),
+  //   users: `${(Math.random() * 10 + 1).toFixed(1)}k`,
+  //   downloads: `${(Math.random() * 30 + 5).toFixed(1)}k`,
+  //   trending: Math.random() > 0.7,
+  //   tags: agent.capabilities ? agent.capabilities.slice(0, 3) : ['AI', 'Bot', 'Helper'],
+  //   icon: getIconForCapabilities(agent.capabilities || []),
+  //   color: getColorForCapabilities(agent.capabilities || []),
+  //   owned: isOwned,
+  //   createdByUser: isCreated,
+  //   liked: Math.random() > 0.5,
+  //   redirectUrl: `/agent/${agent.id}`,
+  //   isFree: agent.price === 0 || agent.price === 'Free' // Check if it's free
+  // });
+  const transformApiAgent = (agent, isOwned = false, isCreated = false) => {
+    // Determine the full creator address from multiple possible structures
+    const fullCreatorAddress = (agent.creator ? agent.creator.walletAddress : agent.creatorWalletAddress) || null;
+
+    return {
+      // The DATABASE ID, used for keys and URL links
+      id: agent.id, 
+      
+      // The ON-CHAIN ID from the blockchain, used for payments
+      agentId: agent.agentId, 
+
+      name: agent.name,
+      description: agent.description,
+      price: agent.price ? `${agent.price} Zlag` : "50 Zlag",
+      
+      // NEW: Use the robust fullCreatorAddress variable
+      creatorAddress: fullCreatorAddress,
+
+      // KEEP: The shortened address for display purposes only
+      creator: fullCreatorAddress ? fullCreatorAddress.slice(0, 8) + '...' : "Community",
+      
+      // ... keep the rest of the function the same
+      rating: (4.0 + Math.random() * 1.0),
+      users: `${(Math.random() * 10 + 1).toFixed(1)}k`,
+      downloads: `${(Math.random() * 30 + 5).toFixed(1)}k`,
+      trending: Math.random() > 0.7,
+      tags: agent.capabilities ? agent.capabilities.slice(0, 3) : ['AI', 'Bot', 'Helper'],
+      icon: getIconForCapabilities(agent.capabilities || []),
+      color: getColorForCapabilities(agent.capabilities || []),
+      owned: isOwned,
+      createdByUser: isCreated,
+      liked: Math.random() > 0.5,
+      redirectUrl: `/agent/${agent.id}`,
+      isFree: agent.price === 0 || agent.price === 'Free'
+    };
+  };
 
   
   // --- CORRECTED useEffect HOOK ---
+  // UPDATED useEffect: Handles fetching data ONLY when connected.
   useEffect(() => {
-    // If no wallet is connected, clear the lists and stop.
-    if (!isConnected || !userAddress) {
-      setApiAgents([]);
-      setOwnedAgents([]);
-      setCreatedAgents([]);
-      setLoading(false);
-      return;
-    }
+    const fetchAgents = async () => {
+      // The guard clause is still here, but it no longer clears state.
+      if (!isConnected || !userAddress) {
+        return;
+      }
 
-
-  const fetchAgents = async () => {
       try {
         setLoading(true);
         setError(null);
@@ -311,13 +373,18 @@ const MarketplacePage = () => {
           if (ownedResult.success) {
             const transformedOwned = ownedResult.agents.map(agent => transformApiAgent(agent, true, false));
             setOwnedAgents(transformedOwned);
-            transformedOwned.forEach(agent => ownedAgentIds.add(agent.id));
-          }
+            }
+        } else {
+           setOwnedAgents([]); // Clear on error
         }
 
         // Process created agents
         if (createdResponse.ok) {
           const createdResult = await createdResponse.json();
+
+          // ✅ STEP 1: LOG THE RAW API DATA HERE
+          console.log("🕵️‍♂️ Raw data from /created-agents API:", createdResult);
+
           if (createdResult.success) {
             const transformedCreated = createdResult.agents.map(agent => transformApiAgent(agent, false, true));
             setCreatedAgents(transformedCreated);
@@ -326,17 +393,21 @@ const MarketplacePage = () => {
         }
 
         // Process all agents and filter out the ones already owned
+        // Process all agents
         if (generalResponse.ok) {
           const generalResult = await generalResponse.json();
+          const ownedAgentIds = new Set(ownedAgents.map(a => a.id));
           if (generalResult.success) {
-            allAgentsData = generalResult.agents
-              .filter(agent => !ownedAgentIds.has(agent.id)) // Don't show owned agents in the main list
+            const allAgentsData = generalResult.agents
+              .filter(agent => !ownedAgentIds.has(agent.id))
               .map(agent => {
                 const isCreated = agent.creatorWalletAddress === userAddress;
                 return transformApiAgent(agent, false, isCreated);
               });
             setApiAgents(allAgentsData);
           }
+        } else {
+           setApiAgents([]); // Clear on error
         }
 
       } catch (err) {
@@ -348,41 +419,84 @@ const MarketplacePage = () => {
     };
 
     fetchAgents();
-  // --- THE CRUCIAL FIX ---
-  // This dependency array ensures the data re-fetches when the wallet address changes.
-  }, [userAddress, isConnected]);
+  }, [userAddress, isConnected]); // The dependencies are correct
+
+   // ✅ STEP 2: LOG THE STATE VARIABLE HERE, OUTSIDE THE USEEFFECT
+  console.log("📦 Current 'createdAgents' state:", createdAgents);
 
 
 // --- CORRECTED FILTERING LOGIC ---
-  const getFilteredAgents = () => {
-    let agentsToShow = [];
+  // const getFilteredAgents = () => {
+  //   let agentsToShow = [];
     
+  //   switch (selectedFilter) {
+  //     case 'owned':
+  //       // Filter the ownedAgents list based on the user's wallet
+  //       agentsToShow = ownedAgents;
+  //       break;
+  //     case 'created':
+  //       // FIX: Compare against the full creatorAddress
+  //       agentsToShow = createdAgents.filter(agent => agent.creatorAddress === userAddress);
+  //       break;
+  //     default:
+  //       // For 'all', show featured and API agents
+  //       const allAvailableAgents = [...featuredAgents, ...apiAgents];
+  //       // FIX: Compare against the full creatorAddress to hide your own agents from the 'buy' list
+  //       agentsToShow = allAvailableAgents.filter(agent => agent.creatorAddress !== userAddress);
+  //       break;
+  //   }
+
+  //   // Apply the search term to the already filtered list
+  //   return agentsToShow.filter(agent =>
+  //     agent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     agent.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     (agent.tags && agent.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())))
+  //   );
+  // };
+
+  // --- FINAL CORRECTED FILTERING LOGIC ---
+  const getFilteredAgents = () => {
+    let sourceArray = [];
+
+    // Step 1: Determine which list of agents to start with.
     switch (selectedFilter) {
       case 'owned':
-        // Filter the ownedAgents list based on the user's wallet
-        agentsToShow = ownedAgents;
+        sourceArray = ownedAgents;
         break;
       case 'created':
-        // Filter all created agents to show only the ones made by the current user
-        agentsToShow = createdAgents.filter(agent => agent.creator === userAddress);
+        sourceArray = createdAgents;
         break;
-      default:
-        // For 'all', show featured and API agents
-        const allAvailableAgents = [...featuredAgents, ...apiAgents];
-        // Ensure we don't show agents created by the current user unless they are also for sale
-        agentsToShow = allAvailableAgents.filter(agent => agent.creator !== userAddress);
+      default: // 'all'
+        const allAvailable = [...featuredAgents, ...apiAgents];
+        // In the 'all' view, filter out any agents created by the current user.
+        if (userAddress) {
+          const lowerCaseUserAddress = userAddress.toLowerCase();
+          sourceArray = allAvailable.filter(agent => 
+            !agent.creatorAddress || agent.creatorAddress.toLowerCase() !== lowerCaseUserAddress
+          );
+        } else {
+          sourceArray = allAvailable;
+        }
         break;
     }
 
-    // Apply the search term to the already filtered list
-    return agentsToShow.filter(agent =>
-      agent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      agent.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (agent.tags && agent.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())))
+    // Step 2: If there's a search term, filter the chosen list. Otherwise, return it as is.
+    if (searchTerm.trim() === '') {
+      return sourceArray;
+    }
+
+    const lowerCaseSearchTerm = searchTerm.toLowerCase();
+    return sourceArray.filter(agent =>
+      agent.name.toLowerCase().includes(lowerCaseSearchTerm) ||
+      agent.description.toLowerCase().includes(lowerCaseSearchTerm) ||
+      (agent.tags && agent.tags.some(tag => tag.toLowerCase().includes(lowerCaseSearchTerm)))
     );
   };
 
   const filteredAgents = getFilteredAgents();
+
+  // ✅ ADD THIS LOG HERE to see the final result before rendering
+  console.log("✔️ Final filtered agents to be displayed:", filteredAgents);
 
   const filters = [
     { id: 'all', name: 'All Agents', icon: Bot },
@@ -745,7 +859,17 @@ const MarketplacePage = () => {
                             <div className={`text-xl font-bold ${agent.isFree ? 'text-green-400' : 'bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent'}`}>
                               {agent.price}
                             </div>
-                            <div className="text-xs text-gray-400 font-medium">by {agent.creator}</div>
+                            <div className="flex items-center gap-2 text-xs text-gray-400 font-medium">
+                              <span>by {agent.creator}</span>
+                              <div className="relative group flex items-center">
+                                <span className="cursor-help text-gray-500 font-mono">ⓘ</span>
+                                {/* This is the tooltip that appears on hover */}
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-3 py-1.5 bg-gray-800 border border-purple-700/50 rounded-lg text-white text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                  Agent ID: {agent.agentId}
+                                  <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-gray-800"></div>
+                                </div>
+                              </div>
+                            </div>
                           </div>
                           <button 
                             onClick={(e) => {
