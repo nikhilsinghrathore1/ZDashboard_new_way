@@ -12,40 +12,6 @@ import AgentPlatformABI from '../contracts/AgentPlatform.json';
 import ERC20ABI from '../contracts/erc20_abi.json';
 import { agentPlatformAddress, yourTokenAddress } from '../contracts/addresses';
 
-// @ts-ignore
-// const AiAgentsCard = ({img, title, description, price, owner, url, agentId}) => {
-//   const [showPaymentModal, setShowPaymentModal] = useState(false);
-//   const [paymentStep, setPaymentStep] = useState('payment'); // 'payment' or 'success'
-//   const [isProcessing, setIsProcessing] = useState(false);
-//   const router = useRouter();
-//   const { isConnected } = useAccount(); // <-- Add this line
-
-
-//   const handleBuyClick = () => {
-//     setShowPaymentModal(true);
-//     setPaymentStep('payment');
-//   };
-
-//   const handlePayment = async () => {
-//     setIsProcessing(true);
-//     // Simulate payment processing
-//     setTimeout(() => {
-//       setIsProcessing(false);
-//       setPaymentStep('success');
-//     }, 2000);
-//   };
-
-//   const handleDeploy = () => {
-//     setShowPaymentModal(false);
-//     router.push(url);
-//   };
-
-//   const closeModal = () => {
-//     setShowPaymentModal(false);
-//     setPaymentStep('payment');
-//     setIsProcessing(false);
-//   };
-
 interface AiAgentsCardProps {
   img: any;
   title: string;
@@ -108,7 +74,33 @@ const AiAgentsCard: React.FC<AiAgentsCardProps> = ({ img, title, description, pr
     }
   }, [isRentConfirmed]);
 
+  // Check if this is a free agent that should redirect directly
+  const isFreeAgent = (agentTitle: string) => {
+    const normalizedTitle = agentTitle.toLowerCase();
+    return normalizedTitle.includes('lana code') || normalizedTitle.includes('quickie trader');
+  };
+
+  // Get the redirect URL for free agents
+  const getFreeAgentUrl = (agentTitle: string) => {
+    const normalizedTitle = agentTitle.toLowerCase();
+    if (normalizedTitle.includes('lana code')) {
+      return '/agent/codeGen';
+    } else if (normalizedTitle.includes('quickie trader')) {
+      return '/agent/trading';
+    }
+    return url; // fallback to original url
+  };
+
   const handleBuyClick = () => {
+    // Check if this is a free agent
+    if (isFreeAgent(title)) {
+      // Redirect directly to the agent page
+      const redirectUrl = getFreeAgentUrl(title);
+      router.push(redirectUrl);
+      return;
+    }
+    
+    // Otherwise, show payment modal for paid agents
     setShowPaymentModal(true);
     setPaymentStep('payment');
   };
@@ -155,14 +147,13 @@ const AiAgentsCard: React.FC<AiAgentsCardProps> = ({ img, title, description, pr
     }
   };
 
-
   return (
     <>
-      <div className="w-[25%] h-[95%] relative group cursor-pointer"
+      <div className="w-[25%] h-[95%] relative cursor-pointer"
       onClick={handleBuyClick}>
         {/* Main card with cyberpunk shape - clipped corners */}
         <div 
-          className="w-full h-full relative overflow-hidden transition-all duration-500 hover:scale-[1.02] hover:rotate-1"
+          className="w-full h-full relative overflow-hidden"
           style={{
             clipPath: 'polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px))'
           }}
@@ -170,41 +161,30 @@ const AiAgentsCard: React.FC<AiAgentsCardProps> = ({ img, title, description, pr
           {/* Background image */}
           <div className="w-full h-full">
             <Image
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+              className="w-full h-full object-cover" 
               src={img} 
               alt="AI Agent Background" 
             />
-            {/* Neon liquid overlay gradients */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-[#4cc9ff]/20 to-transparent"></div>
-            <div className="absolute inset-0 bg-gradient-to-br from-[#4cc9ff]/10 via-transparent to-[#00fff0]/10"></div>
-            
-            {/* Liquid flow background overlay */}
-            <div className="absolute inset-0 opacity-20 pointer-events-none">
-              <div
-                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                style={{
-                  background: 'radial-gradient(70% 100% at 30% 50%, rgba(76,201,255,0.15), rgba(0,255,240,0.1) 50%, transparent 80%)',
-                  animation: 'cardLiquidFlow 4s ease-in-out infinite alternate'
-                }}
-              />
-            </div>
+            {/* Pure black overlay gradients */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-purple-900/20 to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-800/10 via-transparent to-purple-600/10"></div>
           </div>
           
           {/* Glass morphism info panel */}
-          <div className="absolute bottom-0 left-0 right-0 h-[45%] backdrop-blur-xl bg-gradient-to-t from-black/70 via-black/50 to-transparent border-t border-[#4cc9ff]/30">
+          <div className="absolute bottom-0 left-0 right-0 h-[45%] backdrop-blur-xl bg-gradient-to-t from-black/95 via-black/80 to-transparent border-t border-purple-500/30">
             {/* Glowing top border */}
-            <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#4cc9ff] to-transparent shadow-[0_0_8px_rgba(76,201,255,0.8)]"></div>
+            <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-purple-500 to-transparent shadow-[0_0_8px_rgba(147,51,234,0.8)]"></div>
             
             {/* Glass highlight */}
-            <div className="absolute top-1 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-60"></div>
+            <div className="absolute top-1 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-400/30 to-transparent opacity-60"></div>
             
             {/* Content */}
             <div className="p-4 h-full flex flex-col justify-between text-white relative z-10">
               <div className="space-y-2">
-                <h1 className="text-xl font-bold bg-gradient-to-r from-[#4cc9ff] via-[#00fff0] to-[#4cc9ff] bg-clip-text text-transparent tracking-wider"
+                <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 via-purple-300 to-purple-400 bg-clip-text text-transparent tracking-wider"
                     style={{
-                      textShadow: '0 0 10px rgba(76,201,255,0.5)',
-                      filter: 'drop-shadow(0 0 6px rgba(76,201,255,0.3))'
+                      textShadow: '0 0 10px rgba(147,51,234,0.5)',
+                      filter: 'drop-shadow(0 0 6px rgba(147,51,234,0.3))'
                     }}>
                   {title}
                 </h1>
@@ -215,109 +195,52 @@ const AiAgentsCard: React.FC<AiAgentsCardProps> = ({ img, title, description, pr
               
               <div className="flex items-end justify-between">
                 <div className="space-y-1">
-                  <h1 className="text-lg font-bold text-[#00fff0] relative"
+                  <h1 className="text-lg font-bold text-purple-300 relative"
                       style={{
-                        textShadow: '0 0 12px rgba(0,255,240,0.8), 0 0 25px rgba(0,255,240,0.4)',
-                        filter: 'drop-shadow(0 0 8px rgba(0,255,240,0.6))'
+                        textShadow: '0 0 12px rgba(196,181,253,0.8), 0 0 25px rgba(196,181,253,0.4)',
+                        filter: 'drop-shadow(0 0 8px rgba(196,181,253,0.6))'
                       }}>
-                    {price}
+                    {isFreeAgent(title) ? 'FREE' : price}
                   </h1>
-                  <h2 className="text-xs text-[#4cc9ff]/70 uppercase tracking-wider">
+                  <h2 className="text-xs text-purple-400/70 uppercase tracking-wider">
                     {owner}
                   </h2>
                 </div>
                 
                 <button 
                   onClick={(e) => { e.stopPropagation(); handleBuyClick(); }}
-                  className="relative px-4 py-2 bg-gradient-to-r from-[#4cc9ff] to-[#00fff0] hover:from-[#4cc9ff]/80 hover:to-[#00fff0]/80 transition-all duration-300 font-semibold uppercase tracking-wider text-sm transform hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(76,201,255,0.4)] hover:shadow-[0_0_30px_rgba(76,201,255,0.6)] backdrop-blur-sm"
+                  className="relative px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-500 font-semibold uppercase tracking-wider text-sm shadow-[0_0_20px_rgba(147,51,234,0.4)] backdrop-blur-sm"
                   style={{
                     clipPath: 'polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))'
                   }}
                 >
-                  <span className="relative z-10 text-white">BUY</span>
+                  <span className="relative z-10 text-white">
+                    {isFreeAgent(title) ? 'USE' : 'BUY'}
+                  </span>
                   
                   {/* Glass highlight */}
                   <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-60"></div>
-                  
-                  {/* Glowing effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#4cc9ff]/20 to-[#00fff0]/20 opacity-0 hover:opacity-100 transition-opacity duration-300"
-                       style={{
-                         clipPath: 'polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))'
-                       }}>
-                  </div>
                 </button>
               </div>
             </div>
             
             {/* Ambient light effects */}
-            <div className="absolute bottom-0 left-4 w-20 h-20 bg-[#4cc9ff]/20 rounded-full blur-xl animate-pulse"></div>
-            <div className="absolute top-4 right-4 w-16 h-16 bg-[#00fff0]/20 rounded-full blur-lg animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+            <div className="absolute bottom-0 left-4 w-20 h-20 bg-purple-600/20 rounded-full blur-xl animate-pulse"></div>
+            <div className="absolute top-4 right-4 w-16 h-16 bg-purple-500/20 rounded-full blur-lg animate-pulse" style={{ animationDelay: '0.5s' }}></div>
           </div>
           
           {/* Cyberpunk corner accents */}
-          <div className="absolute top-1 right-1 w-6 h-6 border-t-2 border-r-2 border-[#4cc9ff]/60 group-hover:border-[#4cc9ff] transition-colors duration-300 group-hover:shadow-[0_0_8px_rgba(76,201,255,0.6)]"></div>
-          <div className="absolute bottom-1 left-1 w-6 h-6 border-b-2 border-l-2 border-[#00fff0]/60 group-hover:border-[#00fff0] transition-colors duration-300 group-hover:shadow-[0_0_8px_rgba(0,255,240,0.6)]"></div>
+          <div className="absolute top-1 right-1 w-6 h-6 border-t-2 border-r-2 border-purple-500/60"></div>
+          <div className="absolute bottom-1 left-1 w-6 h-6 border-b-2 border-l-2 border-purple-400/60"></div>
           
           {/* Additional corner details */}
-          <div className="absolute top-1 left-1 w-3 h-3 border-t border-l border-[#7a5cff]/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <div className="absolute bottom-1 right-1 w-3 h-3 border-b border-r border-[#7a5cff]/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="absolute top-1 left-1 w-3 h-3 border-t border-l border-purple-600/40"></div>
+          <div className="absolute bottom-1 right-1 w-3 h-3 border-b border-r border-purple-600/40"></div>
         </div>
-        
-        {/* Holographic scan line effect */}
-        <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-          <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#4cc9ff] to-transparent"
-               style={{
-                 animation: 'scanLineMove 3s linear infinite',
-                 boxShadow: '0 0 10px rgba(76,201,255,0.8)'
-               }}>
-          </div>
-        </div>
-        
-        {/* Neon glow effect on hover */}
-        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-             style={{
-               clipPath: 'polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px))',
-               boxShadow: '0 0 30px rgba(76,201,255,0.4), 0 0 60px rgba(76,201,255,0.2), inset 0 0 30px rgba(76,201,255,0.1)'
-             }}>
-        </div>
-        
-        {/* Floating energy particles */}
-        <div className="absolute top-2 right-8 w-1 h-1 bg-[#4cc9ff] rounded-full opacity-0 group-hover:opacity-60 transition-opacity duration-500 group-hover:animate-pulse"></div>
-        <div className="absolute bottom-12 left-6 w-1 h-1 bg-[#00fff0] rounded-full opacity-0 group-hover:opacity-40 transition-opacity duration-700 group-hover:animate-pulse" style={{ animationDelay: '0.3s' }}></div>
-        
-        {/* CSS animations */}
-        <style jsx>{`
-          @keyframes cardLiquidFlow {
-            0% { 
-              transform: scale(1) rotate(0deg); 
-              opacity: 0.2;
-            }
-            100% { 
-              transform: scale(1.02) rotate(2deg); 
-              opacity: 0.4;
-            }
-          }
-          @keyframes scanLineMove {
-            0% { 
-              transform: translateY(-100%); 
-              opacity: 0;
-            }
-            10% {
-              opacity: 1;
-            }
-            90% {
-              opacity: 1;
-            }
-            100% { 
-              transform: translateY(400%); 
-              opacity: 0;
-            }
-          }
-        `}</style>
       </div>
 
-      {/* Payment Modal */}
-      {showPaymentModal && (
+      {/* Payment Modal - Only shows for paid agents */}
+      {showPaymentModal && !isFreeAgent(title) && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center">
           {/* Backdrop */}
           <div 
@@ -326,12 +249,12 @@ const AiAgentsCard: React.FC<AiAgentsCardProps> = ({ img, title, description, pr
           ></div>
           
           {/* Modal */}
-          <div className="relative w-[90%] max-w-md bg-gradient-to-br from-[#020204] via-[#0f0f1a] to-[#020204] border border-[#4cc9ff]/30 rounded-lg shadow-[0_0_50px_rgba(76,201,255,0.3)] backdrop-blur-md">
+          <div className="relative w-[90%] max-w-md bg-gradient-to-br from-black via-gray-900 to-black border border-purple-500/30 rounded-lg shadow-[0_0_50px_rgba(147,51,234,0.3)] backdrop-blur-md">
             
             {/* Header */}
-            <div className="p-6 border-b border-[#4cc9ff]/20">
+            <div className="p-6 border-b border-purple-500/20">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold bg-gradient-to-r from-[#4cc9ff] to-[#00fff0] bg-clip-text text-transparent">
+                <h2 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-purple-300 bg-clip-text text-transparent">
                   {paymentStep === 'payment' ? 'Complete Purchase' : 'Payment Successful!'}
                 </h2>
                 <button 
@@ -356,7 +279,7 @@ const AiAgentsCard: React.FC<AiAgentsCardProps> = ({ img, title, description, pr
                       <div>
                         <h3 className="text-white font-semibold">{title}</h3>
                         <p className="text-white/60 text-sm">by {owner}</p>
-                        <p className="text-[#00fff0] font-bold text-lg">{price}</p>
+                        <p className="text-purple-300 font-bold text-lg">{price}</p>
                       </div>
                     </div>
                   </div>
@@ -364,24 +287,24 @@ const AiAgentsCard: React.FC<AiAgentsCardProps> = ({ img, title, description, pr
                   {/* Payment Method - Only Crypto */}
                   <div className="space-y-4">
                     <h4 className="text-white font-medium">Payment Method</h4>
-                    <div className="p-4 border-2 border-[#4cc9ff]/50 rounded-lg bg-gradient-to-r from-[#4cc9ff]/20 to-[#00fff0]/20 shadow-[0_0_15px_rgba(76,201,255,0.3)]">
+                    <div className="p-4 border-2 border-purple-500/50 rounded-lg bg-gradient-to-r from-purple-600/20 to-purple-500/20 shadow-[0_0_15px_rgba(147,51,234,0.3)]">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                          <div className="p-2 bg-[#4cc9ff]/20 rounded-lg">
-                            <Wallet className="text-[#4cc9ff]" size={20} />
+                          <div className="p-2 bg-purple-600/20 rounded-lg">
+                            <Wallet className="text-purple-400" size={20} />
                           </div>
                           <div>
                             <span className="text-white font-semibold">Crypto Wallet</span>
-                            <p className="text-[#4cc9ff] text-sm">Secure & Decentralized</p>
+                            <p className="text-purple-400 text-sm">Secure & Decentralized</p>
                           </div>
                         </div>
-                        <div className="w-4 h-4 bg-[#4cc9ff] rounded-full shadow-[0_0_8px_rgba(76,201,255,0.8)]"></div>
+                        <div className="w-4 h-4 bg-purple-500 rounded-full shadow-[0_0_8px_rgba(147,51,234,0.8)]"></div>
                       </div>
                     </div>
                     
                     {/* Crypto info */}
-                    <div className="p-3 bg-[#4cc9ff]/10 border border-[#4cc9ff]/30 rounded-lg">
-                      <p className="text-[#4cc9ff] text-sm font-medium">✓ Connect your wallet to proceed</p>
+                    <div className="p-3 bg-purple-600/10 border border-purple-500/30 rounded-lg">
+                      <p className="text-purple-400 text-sm font-medium">✓ Connect your wallet to proceed</p>
                       <p className="text-white/60 text-xs mt-1">Supports ETH, MATIC, and other major cryptocurrencies</p>
                     </div>
                   </div>
@@ -390,7 +313,7 @@ const AiAgentsCard: React.FC<AiAgentsCardProps> = ({ img, title, description, pr
                   <button
                     onClick={handlePayment}
                     disabled={isProcessing || !isConnected}
-                    className="w-full py-3 bg-gradient-to-r from-[#4cc9ff] to-[#00fff0] hover:from-[#4cc9ff]/80 hover:to-[#00fff0]/80 disabled:opacity-50 text-white font-bold rounded-lg transition-all duration-300 shadow-[0_0_20px_rgba(76,201,255,0.4)] hover:shadow-[0_0_30px_rgba(76,201,255,0.6)]"
+                    className="w-full py-3 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-600/80 hover:to-purple-500/80 disabled:opacity-50 text-white font-bold rounded-lg transition-all duration-300 shadow-[0_0_20px_rgba(147,51,234,0.4)] hover:shadow-[0_0_30px_rgba(147,51,234,0.6)]"
                   >
                     {isProcessing ? (
                       <div className="flex items-center justify-center space-x-2">
@@ -408,7 +331,7 @@ const AiAgentsCard: React.FC<AiAgentsCardProps> = ({ img, title, description, pr
                 <>
                   {/* Success State */}
                   <div className="text-center space-y-6">
-                    <div className="mx-auto w-16 h-16 bg-gradient-to-r from-[#4cc9ff] to-[#00fff0] rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(76,201,255,0.5)]">
+                    <div className="mx-auto w-16 h-16 bg-gradient-to-r from-purple-600 to-purple-500 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(147,51,234,0.5)]">
                       <CheckCircle className="text-white" size={32} />
                     </div>
                     
@@ -417,15 +340,15 @@ const AiAgentsCard: React.FC<AiAgentsCardProps> = ({ img, title, description, pr
                       <p className="text-white/70">Your AI Agent is ready to deploy</p>
                     </div>
 
-                    <div className="p-4 bg-[#4cc9ff]/10 border border-[#4cc9ff]/30 rounded-lg">
-                      <p className="text-[#4cc9ff] font-medium">{title}</p>
+                    <div className="p-4 bg-purple-600/10 border border-purple-500/30 rounded-lg">
+                      <p className="text-purple-400 font-medium">{title}</p>
                       <p className="text-white/60 text-sm">Successfully purchased with crypto</p>
                     </div>
 
                     {/* Deploy Button */}
                     <button
                       onClick={handleDeploy}
-                      className="w-full py-3 bg-gradient-to-r from-[#00fff0] to-[#4cc9ff] hover:from-[#00fff0]/80 hover:to-[#4cc9ff]/80 text-white font-bold rounded-lg transition-all duration-300 shadow-[0_0_20px_rgba(0,255,240,0.4)] hover:shadow-[0_0_30px_rgba(0,255,240,0.6)]"
+                      className="w-full py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-500/80 hover:to-purple-600/80 text-white font-bold rounded-lg transition-all duration-300 shadow-[0_0_20px_rgba(147,51,234,0.4)] hover:shadow-[0_0_30px_rgba(147,51,234,0.6)]"
                     >
                       Deploy Agent
                     </button>

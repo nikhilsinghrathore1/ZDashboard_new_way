@@ -44,7 +44,7 @@ const featuredAgentsData = [
   {
     url: "/agent/trading",
     img: img2,
-    title: "QuickieTrader",
+    title: "Quickie Trader",
     description: "autonomous ai assistant that helps you trade",
     price: "2.5 ZLAG",
     owner: "by TeamZ",
