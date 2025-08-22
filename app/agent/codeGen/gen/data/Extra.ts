@@ -139,6 +139,7 @@ export default config;
   },
   DEPENDANCY: {
     'postcss': '^8',
+     "web3": "^4.16.0",
     'tailwindcss': '^3.4.1',
     'autoprefixer': '^10.0.0',
     'uuid4': '^2.0.3',

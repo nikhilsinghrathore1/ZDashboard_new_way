@@ -840,8 +840,7 @@ const AgentCreationPage = () => {
                     className="w-full px-8 py-5 bg-purple-600 text-white font-semibold rounded-xl hover:bg-purple-500 transition-all duration-300 hover:shadow-xl hover:shadow-purple-600/30 focus:outline-none focus:ring-4 focus:ring-purple-400/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-lg"
                   >
                     {/* @ts-ignore */}
-                    {deploymentStatus === "approving" ||
-                    deploymentStatus === "deploying" ? (
+                    {deploymentStatus === "approving" ||deploymentStatus === "deploying" ? (
                       <>
                         <div className="w-6 h-6 mr-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                         Processing Payment...

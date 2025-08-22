@@ -1,21 +1,6 @@
 import dedent from 'dedent';
 
 export default {
-  SUGGSTIONS: [
-    'Create ToDo App in React',
-    'Create Budget Track App',
-    'Create Gym Managment Portal Dashboard',
-    'Create Quizz App On History',
-    'Create Login Signup Screen',
-  ],
-  HERO_HEADING: 'What do you want to build?',
-  HERO_DESC: 'Prompt, run, edit, and deploy full-stack web apps.',
-  INPUT_PLACEHOLDER: 'What you want to build?',
-  SIGNIN_HEADING: 'Continue With Bolt.New 2.0',
-  SIGNIN_SUBHEADING:
-    'To use Bolt you must log into an existing account or create one.',
-  SIGNIn_AGREEMENT_TEXT:
-    'By using Bolt, you agree to the collection of usage data for analytics.',
 
   DEFAULT_FILE: {
     '/public/index.html': {
@@ -160,38 +145,5 @@ export default config;
     'class-variance-authority': '^0.7.0',
     'clsx': '^2.0.0',
     '@tailwindcss/typography': '^0.5.10',
-  },
-
-  PRICING_DESC:
-    'Start with a free account to speed up your workflow on public projects or boost your entire team with instantly-opening production environments.',
-  PRICING_OPTIONS: [
-    {
-      name: 'Basic',
-      tokens: '50K',
-      value: 50000,
-      desc: 'Ideal for hobbyists and casual users for light, exploratory use.',
-      price: 4.99,
-    },
-    {
-      name: 'Starter',
-      tokens: '120K',
-      value: 120000,
-      desc: 'Designed for professionals who need to use Bolt a few times per week.',
-      price: 9.99,
-    },
-    {
-      name: 'Pro',
-      tokens: '2.5M',
-      value: 2500000,
-      desc: 'Designed for professionals who need to use Bolt a few times per week.',
-      price: 19.99,
-    },
-    {
-      name: 'Unlimted (License)',
-      tokens: 'Unmited',
-      value: 999999999,
-      desc: 'Designed for professionals who need to use Bolt a few times per week.',
-      price: 49.99,
-    },
-  ],
+  }
 };

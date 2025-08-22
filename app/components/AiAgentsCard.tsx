@@ -149,7 +149,7 @@ const AiAgentsCard: React.FC<AiAgentsCardProps> = ({ img, title, description, pr
 
   return (
     <>
-      <div className="w-[25%] h-[95%] relative cursor-pointer"
+      <div className="w-[25%] h-[95%] relative "
       onClick={handleBuyClick}>
         {/* Main card with cyberpunk shape - clipped corners */}
         <div 
@@ -209,7 +209,7 @@ const AiAgentsCard: React.FC<AiAgentsCardProps> = ({ img, title, description, pr
                 
                 <button 
                   onClick={(e) => { e.stopPropagation(); handleBuyClick(); }}
-                  className="relative hover:scale-95 px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-500 font-semibold uppercase tracking-wider text-sm shadow-[0_0_20px_rgba(147,51,234,0.4)] backdrop-blur-sm"
+                  className="relative cursor-pointer hover:scale-95 px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-500 font-semibold uppercase tracking-wider text-sm shadow-[0_0_20px_rgba(147,51,234,0.4)] backdrop-blur-sm"
                   style={{ 
                     clipPath: 'polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))'
                   }}

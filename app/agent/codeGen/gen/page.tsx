@@ -51,7 +51,7 @@ const CodeGenPage = () => {
       
       console.log("Sending payload:", payload);
       
-      const result = await axios.post(`https://forj-backend.vercel.app/code/genCode`, payload);
+      const result = await axios.post(`https://ethback.vercel.app/code/genCode`, payload);
       console.log("Backend response:", result);
        
       const aiResp = result.data.resp;
