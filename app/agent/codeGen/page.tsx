@@ -16,7 +16,25 @@ const Page: React.FC = () => {
   }, []);
  
   return (
-    <div className="w-full h-screen bg-black overflow-hidden relative">
+    <div className="w-full h-[110vh] bg-black overflow-hidden relative">
+
+      {/* Beta Banner */}
+      <div className="absolute top-0 left-0 right-0 z-20 flex justify-center pt-4">
+        <div className="relative">
+          <div 
+            className="px-4 py-1 bg-gradient-to-r from-purple-600/20 via-purple-500/30 to-purple-600/20 border border-purple-400/40 rounded-full backdrop-blur-sm"
+            style={{
+              boxShadow: "0 0 20px rgba(147,51,234,0.3), inset 0 0 20px rgba(147,51,234,0.1)",
+            }}
+          >
+            <span className="text-purple-200 text-xs font-semibold tracking-widest">
+              BETA VERSION
+            </span>
+          </div>
+          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-400/10 via-purple-300/10 to-purple-400/10 animate-pulse"></div>
+        </div>
+      </div>
+
       {/* Cosmic Starry Background */}
       <div className="absolute inset-0">
         {/* Deep space gradient */}
@@ -102,7 +120,7 @@ const Page: React.FC = () => {
       {/* Main Content */}
       <div className="relative z-10 flex flex-col items-center justify-center h-full px-4">
         {/* Logo/Title */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-6">
           <h1
             className="text-7xl md:text-9xl font-bold mb-6 bg-gradient-to-r from-purple-400 via-purple-300 to-purple-400 bg-clip-text text-transparent"
             style={{
@@ -118,9 +136,32 @@ const Page: React.FC = () => {
           </p>
           <div className="w-40 h-px bg-gradient-to-r from-transparent via-purple-400 to-transparent mx-auto mt-6"></div>
         </div>
+        <div >
+          
+            <a
+              href="https://www.wander.app/download"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 text-white rounded-xl hover:from-indigo-500 hover:via-purple-500 hover:to-indigo-500 transition-all duration-300 font-bold tracking-wide text-lg group transform hover:scale-105"
+              style={{
+                boxShadow: "0 0 30px rgba(99,102,241,0.4), 0 0 60px rgba(147,51,234,0.2)",
+                animation: "walletGlow 3s ease-in-out infinite alternate"
+              }}
+            >
+              <svg 
+                className="w-6 h-6 mr-3 group-hover:animate-bounce" 
+                fill="currentColor" 
+                viewBox="0 0 20 20"
+              >
+                <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+              INSTALL WANDER WALLET
+              <div className="ml-3  w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+            </a>
+          </div>
 
         {/* Input Section */}
-        <div className="w-full max-w-3xl mb-12">
+        <div className="w-full mt-10 max-w-3xl mb-12">
           <div className="relative">
             <div className="relative group">
               <input

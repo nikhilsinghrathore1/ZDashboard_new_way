@@ -173,7 +173,7 @@ const MarketplacePage = () => {
   // Custom featured agents - updated with one free trading bot
   const featuredAgents = [
     {
-      id: 'free_trading_bot',
+      id: 'Quickie Trader',
       name: "Free Trading Bot",
       description: "A free AI trading assistant that helps analyze market trends and provides basic trading insights",
       price: "Free",
@@ -210,6 +210,7 @@ const MarketplacePage = () => {
       liked: true,
       redirectUrl: "/agent/codeGen",
       agentId: 1001,
+      isFree:true
     },
     {
       id: 'pushit',
@@ -230,25 +231,25 @@ const MarketplacePage = () => {
       redirectUrl: "/agent/pushit",
       agentId: 1002,
     },
-    {
-      id: 'quicktrader',
-      name: "QuickerTrader",
-      description: "Your everyday trading helper with real-time market analysis and insights",
-      price: "50 Zlag",
-      rating: 4.8,
-      users: "7.8k",
-      downloads: "22.3k",
-      trending: true,
-      creator: "TradeTech",
-      tags: ["Trading", "Finance", "Analysis"],
-      icon: DollarSign,
-      color: "bg-purple-600",
-      owned: false,
-      createdByUser: false,
-      liked: true,
-      redirectUrl: "/agent/trading",
-      agentId: 1003,
-    }
+    // {
+    //   id: 'quicktrader',
+    //   name: "QuickerTrader",
+    //   description: "Your everyday trading helper with real-time market analysis and insights",
+    //   price: "50 Zlag",
+    //   rating: 4.8,
+    //   users: "7.8k",
+    //   downloads: "22.3k",
+    //   trending: true,
+    //   creator: "TradeTech",
+    //   tags: ["Trading", "Finance", "Analysis"],
+    //   icon: DollarSign,
+    //   color: "bg-purple-600",
+    //   owned: false,
+    //   createdByUser: false,
+    //   liked: true,
+    //   redirectUrl: "/agent/trading",
+    //   agentId: 1003,
+    // }
   ]
 
   // Capability to icon mapping

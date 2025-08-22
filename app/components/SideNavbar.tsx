@@ -19,7 +19,7 @@ import {
   Music,
   Square,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 interface NavItemProps {
   icon: React.ComponentType<{ className?: string; size?: number }>;
@@ -270,25 +270,7 @@ const MusicVisualizer: React.FC = () => {
 };
 
 const SideNavbar: React.FC = () => {
-  const [currentPath, setCurrentPath] = useState('/');
-
-  // Listen to route changes to update active state
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setCurrentPath(window.location.pathname);
-      
-      // Listen for navigation events
-      const handleRouteChange = () => {
-        setCurrentPath(window.location.pathname);
-      };
-
-      window.addEventListener('popstate', handleRouteChange);
-      
-      return () => {
-        window.removeEventListener('popstate', handleRouteChange);
-      };
-    }
-  }, []);
+  const pathname = usePathname(); // Use Next.js 13+ usePathname hook
 
   return (
     <div className="w-full py-4 h-full bg-black border-r-[2px] border-purple-800/40">
@@ -319,35 +301,35 @@ const SideNavbar: React.FC = () => {
             icon={Home}
             title="Home"
             subtitle="Command Center"
-            isActive={currentPath === '/'}
+            isActive={pathname === '/'}
             path="/"
           />
           <NavItem
             icon={Zap}
             title="Create AI Agent"
             subtitle="Deploy Intelligence"
-            isActive={currentPath === '/createAgent'}
+            isActive={pathname === '/createAgent'}
             path="/createAgent"
           />
           <NavItem
             icon={ShoppingBag}
             title="Marketplace"
             subtitle="Trade Assets"
-            isActive={currentPath === '/marketplace'}
+            isActive={pathname === '/marketplace'}
             path="/marketplace"
           />
           <NavItem 
             icon={Wallet} 
             title="Wallet" 
             subtitle="Crypto Vault" 
-            isActive={currentPath === '/wallet'}
-            path="/wallet" 
+            isActive={pathname === '/wallet-profile'}
+            path="/wallet-profile" 
           />
           <NavItem 
             icon={Zap} 
             title="your Agents" 
             subtitle="working 24/7" 
-            isActive={currentPath === '/yourAgents'}
+            isActive={pathname === '/yourAgents'}
             path="/yourAgents" 
           />
         </div>

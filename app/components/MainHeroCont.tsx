@@ -142,7 +142,7 @@ const MainHeroCont = () => {
       
       {/* Floating energy particles - increased number and lighter colors */}
       <div className="absolute inset-0 pointer-events-none">
-        {[...Array(350)].map((_, i) => (
+        {[...Array(280)].map((_, i) => (
           <div 
             key={i}
             className="absolute rounded-full"

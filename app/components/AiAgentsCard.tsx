@@ -209,13 +209,13 @@ const AiAgentsCard: React.FC<AiAgentsCardProps> = ({ img, title, description, pr
                 
                 <button 
                   onClick={(e) => { e.stopPropagation(); handleBuyClick(); }}
-                  className="relative px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-500 font-semibold uppercase tracking-wider text-sm shadow-[0_0_20px_rgba(147,51,234,0.4)] backdrop-blur-sm"
-                  style={{
+                  className="relative hover:scale-95 px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-500 font-semibold uppercase tracking-wider text-sm shadow-[0_0_20px_rgba(147,51,234,0.4)] backdrop-blur-sm"
+                  style={{ 
                     clipPath: 'polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))'
                   }}
                 >
                   <span className="relative z-10 text-white">
-                    {isFreeAgent(title) ? 'USE' : 'BUY'}
+                    {isFreeAgent(title) ? 'USE' : 'RENT'}
                   </span>
                   
                   {/* Glass highlight */}
