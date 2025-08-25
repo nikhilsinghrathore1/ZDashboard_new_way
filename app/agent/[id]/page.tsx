@@ -35,6 +35,43 @@ const AgentChatPage: React.FC = () => {
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const [isLoadingAgent, setIsLoadingAgent] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
+  
+  // Rate limiting states
+  const [requestCount, setRequestCount] = useState<number>(0);
+  const [isRateLimited, setIsRateLimited] = useState<boolean>(false);
+  const [rateLimitMessage, setRateLimitMessage] = useState<string>("");
+
+  // Check rate limit on component mount
+  useEffect(() => {
+    const storedCount = parseInt(localStorage.getItem('agentChatRequestCount') || '0');
+    const requestTimestamp = localStorage.getItem('agentChatRequestTimestamp');
+    
+    if (requestTimestamp) {
+      const now = new Date().getTime();
+      const requestTime = parseInt(requestTimestamp);
+      const timeDiff = now - requestTime;
+      
+      // Reset after 24 hours (86400000 ms)
+      const RESET_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+      
+      if (timeDiff < RESET_DURATION) {
+        if (storedCount >= 10) {
+          setIsRateLimited(true);
+          setRequestCount(storedCount);
+          const remainingTime = Math.ceil((RESET_DURATION - timeDiff) / (60 * 60 * 1000)); // in hours
+          setRateLimitMessage(`Rate limit exceeded (${storedCount}/10). Try again in ${remainingTime} hours.`);
+        } else {
+          setRequestCount(storedCount);
+        }
+      } else {
+        // Reset if 24 hours have passed
+        localStorage.removeItem('agentChatRequestCount');
+        localStorage.removeItem('agentChatRequestTimestamp');
+        setRequestCount(0);
+        setIsRateLimited(false);
+      }
+    }
+  }, []);
 
   // Extract agent ID from URL
   useEffect(() => {
@@ -163,7 +200,6 @@ const AgentChatPage: React.FC = () => {
     const systemPrompt = `You are ${agentDetails.name}, ${agentDetails.description}.
 
 Specialized capabilities: ${capabilitiesText}
-Powered by: ${agentDetails.model} architecture
 
 RESPONSE REQUIREMENTS:
 • Keep responses SHORT and CRISP (2-4 sentences max)
@@ -185,10 +221,6 @@ Communication style:
 IMPORTANT: You have access to the conversation history. Use this context to provide relevant, contextual responses that acknowledge previous discussions and avoid repeating information already covered.
 
 Current user query: ${userMessage}
-
-Respond as ${agentDetails.name} with maximum conciseness while maintaining helpfulness, accuracy, and conversation continuity.
-
-and this the history of chats taks this as reference when generating new answers ${chatHistory}
 `;
 
     return systemPrompt;
@@ -255,7 +287,14 @@ and this the history of chats taks this as reference when generating new answers
   };
 
   const handleSendMessage = async (): Promise<void> => {
-    if (!inputValue.trim() || isLoading) return;
+    if (!inputValue.trim() || isLoading || isRateLimited) return;
+
+    // Check rate limit before sending
+    if (requestCount >= 10) {
+      setIsRateLimited(true);
+      setRateLimitMessage(`Rate limit exceeded (${requestCount}/10). Try again in 24 hours.`);
+      return;
+    }
 
     const userMessage: Message = {
       id: Date.now(),
@@ -272,6 +311,18 @@ and this the history of chats taks this as reference when generating new answers
     try {
       // Get actual response from the chat API with conversation history
       const agentResponseText = await getAgentResponse(userMessage.content);
+
+      // Update request count and store in localStorage
+      const newCount = requestCount + 1;
+      setRequestCount(newCount);
+      localStorage.setItem('agentChatRequestCount', newCount.toString());
+      localStorage.setItem('agentChatRequestTimestamp', new Date().getTime().toString());
+
+      // Check if we've hit the limit
+      if (newCount >= 10) {
+        setIsRateLimited(true);
+        setRateLimitMessage(`Rate limit reached (${newCount}/10). You can chat again in 24 hours.`);
+      }
 
       // Simulate realistic typing delay based on response length
       const typingDelay = Math.min(agentResponseText.length * 20 + 1000, 5000);
@@ -402,6 +453,15 @@ and this the history of chats taks this as reference when generating new answers
         </div>
       </div>
 
+      {/* Small rate limit notification */}
+      {isRateLimited && (
+        <div className="relative z-20 text-center py-2">
+          <span className="text-red-400 text-xs bg-red-900/30 px-3 py-1 rounded-full border border-red-500/30">
+            ⚠️ {rateLimitMessage}
+          </span>
+        </div>
+      )}
+
       {/* Header */}
       <div className="relative z-10 bg-black/90 backdrop-blur-xl border-b border-purple-500/30">
         <div className="max-w-6xl mx-auto px-6 py-4">
@@ -445,6 +505,13 @@ and this the history of chats taks this as reference when generating new answers
             </div>
 
             <div className="flex items-center space-x-3">
+              {/* Request Counter */}
+              <div className="relative inline-block text-xs text-purple-200 font-mono bg-black/80 px-3 py-1 rounded-lg border border-purple-500/40 hover:border-purple-400 hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-300">
+                <div className="relative z-10">
+                  {requestCount}/10 Requests Used
+                </div>
+              </div>
+
               {/* Conversation Context Indicator */}
               <div className="relative inline-block text-xs text-purple-200 font-mono bg-black/80 px-3 py-1 rounded-lg border border-purple-500/40 hover:border-purple-400 hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-300">
                 <div className="relative z-10">
@@ -589,11 +656,11 @@ and this the history of chats taks this as reference when generating new answers
                   setInputValue(e.target.value)
                 }
                 onKeyPress={handleKeyPress}
-                placeholder=">>> ENTER YOUR QUERY..."
+                placeholder={isRateLimited ? ">>> RATE LIMIT EXCEEDED..." : ">>> ENTER YOUR QUERY..."}
                 rows={1}
                 className="w-full px-6 py-4 bg-black/80 border border-purple-500/50 rounded-2xl text-purple-300 placeholder-purple-500/60 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/30 focus:outline-none focus:shadow-lg focus:shadow-purple-500/20 transition-all duration-300 resize-none backdrop-blur-sm shadow-inner font-mono hover:border-purple-400 hover:shadow-lg hover:shadow-purple-500/20"
                 style={{ minHeight: "56px", maxHeight: "140px" }}
-                disabled={isLoading || !isOnline}
+                disabled={isLoading || !isOnline || isRateLimited}
               />
               {isLoading && (
                 <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
@@ -615,7 +682,7 @@ and this the history of chats taks this as reference when generating new answers
 
             <button
               onClick={handleSendMessage}
-              disabled={!inputValue.trim() || isLoading || !isOnline}
+              disabled={!inputValue.trim() || isLoading || !isOnline || isRateLimited}
               className="p-4 bg-purple-500/80 text-white rounded-2xl hover:bg-purple-400 transition-all duration-300 hover:shadow-lg hover:shadow-purple-400/40 focus:outline-none focus:ring-4 focus:ring-purple-400/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none group transform hover:scale-105 active:scale-95 shadow-lg border border-purple-400/50"
             >
               <svg
@@ -634,11 +701,13 @@ and this the history of chats taks this as reference when generating new answers
               <div className="flex items-center space-x-2">
                 <div
                   className={`w-2 h-2 rounded-full ${getStatusDot(
-                    isOnline
+                    isOnline && !isRateLimited
                   )} animate-pulse`}
                 ></div>
-                <span className={`font-mono ${getStatusColor(isOnline)}`}>
-                  {isOnline
+                <span className={`font-mono ${getStatusColor(isOnline && !isRateLimited)}`}>
+                  {isRateLimited 
+                    ? "Rate limited" 
+                    : isOnline
                     ? "Neural networks online"
                     : "Connection interrupted"}
                 </span>
@@ -660,6 +729,11 @@ and this the history of chats taks this as reference when generating new answers
             </div>
 
             <div className="flex items-center space-x-4">
+              {/* Request Counter */}
+              <div className="text-purple-400/40 font-mono text-xs">
+                🔢 {requestCount}/10 requests used
+              </div>
+
               {/* History Status */}
               <div className="text-purple-400/40 font-mono text-xs">
                 🧠 Memory active

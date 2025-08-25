@@ -19,10 +19,44 @@ const CodeGenPage = () => {
   const [userInput, setUserInput] = useState('');
   const [files, setfiles] = useState(Extras.DEFAULT_FILE);
   const [loading, setLoading] = useState(false);
+  const [hasUsedRequest, setHasUsedRequest] = useState(false);
+  const [rateLimitMessage, setRateLimitMessage] = useState('');
   const hasInitialized = useRef(false);
 
+  // Check rate limit on component mount
+  useEffect(() => {
+    const requestUsed = JSON.parse(localStorage.getItem('codeGenRequestUsed') || 'false');
+    const requestTimestamp = localStorage.getItem('codeGenRequestTimestamp');
+    
+    if (requestUsed && requestTimestamp) {
+      const now = new Date().getTime();
+      const requestTime = parseInt(requestTimestamp);
+      const timeDiff = now - requestTime;
+      
+      // Reset after 24 hours (86400000 ms) - you can adjust this duration
+      const RESET_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+      
+      if (timeDiff < RESET_DURATION) {
+        setHasUsedRequest(true);
+        const remainingTime = Math.ceil((RESET_DURATION - timeDiff) / (60 * 60 * 1000)); // in hours
+        setRateLimitMessage(`Rate limit exceeded. Try again in ${remainingTime} hours.`);
+      } else {
+        // Reset if 24 hours have passed
+        localStorage.removeItem('codeGenRequestUsed');
+        localStorage.removeItem('codeGenRequestTimestamp');
+        setHasUsedRequest(false);
+      }
+    }
+  }, []);
+
   // Function to get code from backend
-  const GetCode = async (promptText:any) => {
+  const GetCode = async (promptText: any) => {
+    // Check rate limit before making request
+    if (hasUsedRequest) {
+      console.log("Rate limit exceeded");
+      return;
+    }
+
     console.log("running the gencode function");
     setLoading(true);
     console.log("Prompt:", promptText);
@@ -36,19 +70,6 @@ const CodeGenPage = () => {
         prompt: promptText,
       };
       
-      // Option 2: Simple prompt only
-      // const payload = {
-      //   prompt: promptText,
-      // };
-      
-      // Option 3: Messages array format
-      // const payload = {
-      //   messages: [{ role: "user", content: promptText }]
-      // };
-      
-      // Option 4: Direct string
-      // const payload = promptText;
-      
       console.log("Sending payload:", payload);
       
       const result = await axios.post(`https://ethback.vercel.app/code/genCode`, payload);
@@ -59,6 +80,13 @@ const CodeGenPage = () => {
       const mergedFile = { ...aiResp.files };
       console.log("these are the merged files ", mergedFile);
       setfiles(mergedFile);
+      
+      // Mark request as used and store timestamp
+      setHasUsedRequest(true);
+      localStorage.setItem('codeGenRequestUsed', 'true');
+      localStorage.setItem('codeGenRequestTimestamp', new Date().getTime().toString());
+      setRateLimitMessage('Request limit reached. You can make another request in 24 hours.');
+      
       setLoading(false);
     } catch (err) {
       console.log(err);
@@ -73,16 +101,22 @@ const CodeGenPage = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const extractedPrompt = urlParams.get('prompt');
     
-    if (extractedPrompt) {
+    if (extractedPrompt && !hasUsedRequest) {
       const decodedPrompt = decodeURIComponent(extractedPrompt);
       setPrompt(decodedPrompt);
       // Automatically fetch code when prompt is found in URL
       GetCode(decodedPrompt);
       hasInitialized.current = true;
     }
-  }, []);
+  }, [hasUsedRequest]);
 
   const handleInputSubmit = () => {
+    // Check rate limit
+    if (hasUsedRequest) {
+      console.log('Rate limit exceeded:', rateLimitMessage);
+      return;
+    }
+
     // Handle user input submission here
     console.log('User requested changes:', userInput);
     
@@ -135,6 +169,15 @@ const CodeGenPage = () => {
         <div className="mb- flex justify-end">
          
         </div>
+
+        {/* Small rate limit notification */}
+        {hasUsedRequest && (
+          <div className="mb-2 text-center">
+            <span className="text-red-400 text-xs bg-red-900/30 px-3 py-1 rounded-full border border-red-500/30">
+              ⚠️ {rateLimitMessage}
+            </span>
+          </div>
+        )}
 
         {/* Main code editor area */}
         <div className="flex-1 h-[50%] mb-8 relative">
@@ -208,7 +251,7 @@ const CodeGenPage = () => {
             <div className="bg-gray-900/70 border border-purple-500/30 rounded-2xl backdrop-blur-sm overflow-hidden shadow-xl">
               <div className="flex items-center p-4">
                 <div className="flex items-center gap-3 px-4">
-                  <div className={`w-3 h-3 rounded-full ${loading ? 'bg-yellow-400' : 'bg-purple-400'} animate-pulse`}></div>
+                  <div className={`w-3 h-3 rounded-full ${loading ? 'bg-yellow-400' : hasUsedRequest ? 'bg-red-400' : 'bg-purple-400'} animate-pulse`}></div>
                   <span className="text-purple-300 text-sm font-medium">Prompt:</span>
                 </div>
                 
@@ -221,17 +264,17 @@ const CodeGenPage = () => {
                       handleInputSubmit();
                     }
                   }}
-                  placeholder="Describe what you want to build..."
+                  placeholder={hasUsedRequest ? "Rate limit exceeded..." : "Describe what you want to build..."}
                   className="flex-1 bg-transparent text-white placeholder-gray-400 outline-none px-3 py-3 text-sm"
-                  disabled={loading}
+                  disabled={loading || hasUsedRequest}
                 />
                 
                 <button
                   onClick={handleInputSubmit}
-                  disabled={loading || !userInput.trim()}
+                  disabled={loading || !userInput.trim() || hasUsedRequest}
                   className="px-8 py-3 bg-purple-600/80 border border-purple-500/50 text-white hover:bg-purple-500 hover:border-purple-400 transition-all duration-300 rounded-xl text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  {loading ? 'Processing...' : 'Generate'}
+                  {loading ? 'Processing...' : hasUsedRequest ? 'Limited' : 'Generate'}
                 </button>
               </div>
             </div>
@@ -240,12 +283,12 @@ const CodeGenPage = () => {
           {/* Status bar */}
           <div className="mt-3 flex items-center justify-between text-xs text-gray-400">
             <div className="flex items-center gap-6">
-              <span>Status: {loading ? 'Processing' : 'Ready'}</span>
+              <span>Status: {loading ? 'Processing' : hasUsedRequest ? 'Rate Limited' : 'Ready'}</span>
               <span>Connection: Secure</span>
               <span>Memory: 2.4GB</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${loading ? 'bg-yellow-400' : 'bg-purple-400'} animate-pulse`}></div>
+              <div className={`w-2 h-2 rounded-full ${loading ? 'bg-yellow-400' : hasUsedRequest ? 'bg-red-400' : 'bg-purple-400'} animate-pulse`}></div>
               <span>Live Sync</span>
             </div>
           </div>
@@ -307,3 +350,6 @@ const CodeGenPage = () => {
 };
 
 export default CodeGenPage;
+
+
+// okay so what do i have to do now i am thinking that we should not put no actually we have to so what all changes do i have to do maybe i just havd to change the backend of the chat bot also have to create the backend for the ai voice agent that too with like some rate limit 

@@ -136,7 +136,7 @@ const Page: React.FC = () => {
           </p>
           <div className="w-40 h-px bg-gradient-to-r from-transparent via-purple-400 to-transparent mx-auto mt-6"></div>
         </div>
-        <div >
+        {/* <div >
           
             <a
               href="https://www.wander.app/download"
@@ -158,7 +158,7 @@ const Page: React.FC = () => {
               INSTALL WANDER WALLET
               <div className="ml-3  w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
             </a>
-          </div>
+          </div> */}
 
         {/* Input Section */}
         <div className="w-full mt-10 max-w-3xl mb-12">

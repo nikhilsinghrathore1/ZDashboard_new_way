@@ -57,11 +57,11 @@ const MarketplacePage = () => {
     if (isApprovalConfirmed && selectedAgent) {
       // Check if agentId is a valid number (not undefined, null, etc.)
       if (typeof selectedAgent.agentId !== 'number' && typeof selectedAgent.agentId !== 'string') {
-          console.error("❌ CRITICAL: Attempted to rent with an invalid agentId.", selectedAgent);
+          // console.error("❌ CRITICAL: Attempted to rent with an invalid agentId.", selectedAgent);
           setPurchaseError("Purchase failed: Agent ID is missing or invalid. Please contact support.");
           return; // Stop execution
       }
-      console.log("✅ Approval confirmed! Now calling rentAgent...");
+      // console.log("✅ Approval confirmed! Now calling rentAgent...");
       const numericPrice = selectedAgent.price.split(' ')[0];
       const amountInWei = ethers.parseUnits(numericPrice, 18);
 
@@ -73,7 +73,7 @@ const MarketplacePage = () => {
         functionName: 'rentAgent',
         args: [selectedAgent.agentId, amountInWei],
       }).catch(err => {
-        console.error("❌ Rent agent call failed after approval", err);
+        // console.error("❌ Rent agent call failed after approval", err);
         setPurchaseError("Payment failed at the final step. Please try again.");
       });
     }
@@ -171,86 +171,86 @@ const MarketplacePage = () => {
   };
 
   // Custom featured agents - updated with one free trading bot
-  const featuredAgents = [
-    {
-      id: 'Quickie Trader',
-      name: "Free Trading Bot",
-      description: "A free AI trading assistant that helps analyze market trends and provides basic trading insights",
-      price: "Free",
-      rating: 4.8,
-      users: "12.5k",
-      downloads: "45.2k",
-      trending: true,
-      creator: "Zlag Platform",
-      tags: ["Trading", "Free", "Market Analysis"],
-      icon: DollarSign,
-      color: "bg-green-500",
-      owned: false,
-      createdByUser: false,
-      liked: true,
-      redirectUrl: "/agent/trading",
-      agentId: 1000,
-      isFree: true
-    },
-    {
-      id: 'lana_codes',
-      name: "Lana Codes",
-      description: "An autonomous dapp builder that creates decentralized applications automatically",
-      price: "150 Zlag",
-      rating: 4.9,
-      users: "2.1k",
-      downloads: "8.5k",
-      trending: true,
-      creator: "BlockchainLabs",
-      tags: ["DApp", "Blockchain", "Autonomous"],
-      icon: Code,
-      color: "bg-purple-500",
-      owned: false,
-      createdByUser: false,
-      liked: true,
-      redirectUrl: "/agent/codeGen",
-      agentId: 1001,
-      isFree:true
-    },
-    {
-      id: 'pushit',
-      name: "PushIt",
-      description: "Converts your git push into comprehensive documentation automatically",
-      price: "50 Zlag",
-      rating: 4.7,
-      users: "5.4k",
-      downloads: "15.2k",
-      trending: false,
-      creator: "GitFlow",
-      tags: ["Git", "Documentation", "Automation"],
-      icon: GitBranch,
-      color: "bg-indigo-500",
-      owned: false,
-      createdByUser: false,
-      liked: false,
-      redirectUrl: "/agent/pushit",
-      agentId: 1002,
-    },
-    // {
-    //   id: 'quicktrader',
-    //   name: "QuickerTrader",
-    //   description: "Your everyday trading helper with real-time market analysis and insights",
-    //   price: "50 Zlag",
-    //   rating: 4.8,
-    //   users: "7.8k",
-    //   downloads: "22.3k",
-    //   trending: true,
-    //   creator: "TradeTech",
-    //   tags: ["Trading", "Finance", "Analysis"],
-    //   icon: DollarSign,
-    //   color: "bg-purple-600",
-    //   owned: false,
-    //   createdByUser: false,
-    //   liked: true,
-    //   redirectUrl: "/agent/trading",
-    //   agentId: 1003,
-    // }
-  ]
+  // con [
+  //   {
+  //     id: 'Quickie Trader',
+  //     name: "Free Trading Bot",
+  //     description: "A free AI trading assistant that helps analyze market trends and provides basic trading insights",
+  //     price: "Free",
+  //     rating: 4.8,
+  //     users: "12.5k",
+  //     downloads: "45.2k",
+  //     trending: true,
+  //     creator: "Zlag Platform",
+  //     tags: ["Trading", "Free", "Market Analysis"],
+  //     icon: DollarSign,
+  //     color: "bg-green-500",
+  //     owned: false,
+  //     createdByUser: false,
+  //     liked: true,
+  //     redirectUrl: "/agent/trading",
+  //     agentId: 1000,
+  //     isFree: true
+  //   },
+  //   {
+  //     id: 'lana_codes',
+  //     name: "Lana Codes",
+  //     description: "An autonomous dapp builder that creates decentralized applications automatically",
+  //     price: "150 Zlag",
+  //     rating: 4.9,
+  //     users: "2.1k",
+  //     downloads: "8.5k",
+  //     trending: true,
+  //     creator: "BlockchainLabs",
+  //     tags: ["DApp", "Blockchain", "Autonomous"],
+  //     icon: Code,
+  //     color: "bg-purple-500",
+  //     owned: false,
+  //     createdByUser: false,
+  //     liked: true,
+  //     redirectUrl: "/agent/codeGen",
+  //     agentId: 1001,
+  //     isFree:true
+  //   },
+  //   {
+  //     id: 'pushit',
+  //     name: "PushIt",
+  //     description: "Converts your git push into comprehensive documentation automatically",
+  //     price: "50 Zlag",
+  //     rating: 4.7,
+  //     users: "5.4k",
+  //     downloads: "15.2k",
+  //     trending: false,
+  //     creator: "GitFlow",
+  //     tags: ["Git", "Documentation", "Automation"],
+  //     icon: GitBranch,
+  //     color: "bg-indigo-500",
+  //     owned: false,
+  //     createdByUser: false,
+  //     liked: false,
+  //     redirectUrl: "/agent/pushit",
+  //     agentId: 1002,
+  //   },
+  //   // {
+  //   //   id: 'quicktrader',
+  //   //   name: "QuickerTrader",
+  //   //   description: "Your everyday trading helper with real-time market analysis and insights",
+  //   //   price: "50 Zlag",
+  //   //   rating: 4.8,
+  //   //   users: "7.8k",
+  //   //   downloads: "22.3k",
+  //   //   trending: true,
+  //   //   creator: "TradeTech",
+  //   //   tags: ["Trading", "Finance", "Analysis"],
+  //   //   icon: DollarSign,
+  //   //   color: "bg-purple-600",
+  //   //   owned: false,
+  //   //   createdByUser: false,
+  //   //   liked: true,
+  //   //   redirectUrl: "/agent/trading",
+  //   //   agentId: 1003,
+  //   // }
+  // ]
 
   // Capability to icon mapping
   const getIconForCapabilities = (capabilities) => {
@@ -422,7 +422,7 @@ const MarketplacePage = () => {
   }, [userAddress, isConnected]); // The dependencies are correct
 
    // ✅ STEP 2: LOG THE STATE VARIABLE HERE, OUTSIDE THE USEEFFECT
-  console.log("📦 Current 'createdAgents' state:", createdAgents);
+  // console.log("📦 Current 'createdAgents' state:", createdAgents);
 
 
 // --- CORRECTED FILTERING LOGIC ---
@@ -440,7 +440,7 @@ const MarketplacePage = () => {
   //       break;
   //     default:
   //       // For 'all', show featured and API agents
-  //       const allAvailableAgents = [...featuredAgents, ...apiAgents];
+  //       const allAvailableAgents = [...apiAgents];
   //       // FIX: Compare against the full creatorAddress to hide your own agents from the 'buy' list
   //       agentsToShow = allAvailableAgents.filter(agent => agent.creatorAddress !== userAddress);
   //       break;
@@ -467,7 +467,7 @@ const MarketplacePage = () => {
         sourceArray = createdAgents;
         break;
       default: // 'all'
-        const allAvailable = [...featuredAgents, ...apiAgents];
+        const allAvailable = [...apiAgents];
         // In the 'all' view, filter out any agents created by the current user.
         if (userAddress) {
           const lowerCaseUserAddress = userAddress.toLowerCase();
@@ -496,7 +496,7 @@ const MarketplacePage = () => {
   const filteredAgents = getFilteredAgents();
 
   // ✅ ADD THIS LOG HERE to see the final result before rendering
-  console.log("✔️ Final filtered agents to be displayed:", filteredAgents);
+  // console.log("✔️ Final filtered agents to be displayed:", filteredAgents);
 
   const filters = [
     { id: 'all', name: 'All Agents', icon: Bot },

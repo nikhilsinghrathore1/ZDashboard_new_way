@@ -408,7 +408,7 @@ const AgentCreationPage = () => {
         {/* Header */}
         <div className="text-center mb-16">
           <div className="inline-block px-6 py-3 bg-purple-600/20 border border-purple-400/40 rounded-full text-purple-300 text-sm font-medium mb-8">
-            AI Agent Deployment System
+            AI Agent Deployment System <span className="text-green-300">Beta version</span>
           </div>
           <h1 className="text-5xl md:text-7xl font-light mb-8 text-white tracking-wide">
             Autonomous Agent
