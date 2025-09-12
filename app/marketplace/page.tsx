@@ -49,10 +49,6 @@ const MarketplacePage = () => {
   
   // --- This useEffect triggers the rentAgent call AFTER the approval is confirmed ---
 
-  useEffect(()=>{
-
-  },[])
-
   useEffect(() => {
     if (isApprovalConfirmed && selectedAgent) {
       // Check if agentId is a valid number (not undefined, null, etc.)
@@ -73,7 +69,6 @@ const MarketplacePage = () => {
         functionName: 'rentAgent',
         args: [selectedAgent.agentId, amountInWei],
       }).catch(err => {
-        // console.error("❌ Rent agent call failed after approval", err);
         setPurchaseError("Payment failed at the final step. Please try again.");
       });
     }
@@ -170,88 +165,6 @@ const MarketplacePage = () => {
     }
   };
 
-  // Custom featured agents - updated with one free trading bot
-  // con [
-  //   {
-  //     id: 'Quickie Trader',
-  //     name: "Free Trading Bot",
-  //     description: "A free AI trading assistant that helps analyze market trends and provides basic trading insights",
-  //     price: "Free",
-  //     rating: 4.8,
-  //     users: "12.5k",
-  //     downloads: "45.2k",
-  //     trending: true,
-  //     creator: "Zlag Platform",
-  //     tags: ["Trading", "Free", "Market Analysis"],
-  //     icon: DollarSign,
-  //     color: "bg-green-500",
-  //     owned: false,
-  //     createdByUser: false,
-  //     liked: true,
-  //     redirectUrl: "/agent/trading",
-  //     agentId: 1000,
-  //     isFree: true
-  //   },
-  //   {
-  //     id: 'lana_codes',
-  //     name: "Lana Codes",
-  //     description: "An autonomous dapp builder that creates decentralized applications automatically",
-  //     price: "150 Zlag",
-  //     rating: 4.9,
-  //     users: "2.1k",
-  //     downloads: "8.5k",
-  //     trending: true,
-  //     creator: "BlockchainLabs",
-  //     tags: ["DApp", "Blockchain", "Autonomous"],
-  //     icon: Code,
-  //     color: "bg-purple-500",
-  //     owned: false,
-  //     createdByUser: false,
-  //     liked: true,
-  //     redirectUrl: "/agent/codeGen",
-  //     agentId: 1001,
-  //     isFree:true
-  //   },
-  //   {
-  //     id: 'pushit',
-  //     name: "PushIt",
-  //     description: "Converts your git push into comprehensive documentation automatically",
-  //     price: "50 Zlag",
-  //     rating: 4.7,
-  //     users: "5.4k",
-  //     downloads: "15.2k",
-  //     trending: false,
-  //     creator: "GitFlow",
-  //     tags: ["Git", "Documentation", "Automation"],
-  //     icon: GitBranch,
-  //     color: "bg-indigo-500",
-  //     owned: false,
-  //     createdByUser: false,
-  //     liked: false,
-  //     redirectUrl: "/agent/pushit",
-  //     agentId: 1002,
-  //   },
-  //   // {
-  //   //   id: 'quicktrader',
-  //   //   name: "QuickerTrader",
-  //   //   description: "Your everyday trading helper with real-time market analysis and insights",
-  //   //   price: "50 Zlag",
-  //   //   rating: 4.8,
-  //   //   users: "7.8k",
-  //   //   downloads: "22.3k",
-  //   //   trending: true,
-  //   //   creator: "TradeTech",
-  //   //   tags: ["Trading", "Finance", "Analysis"],
-  //   //   icon: DollarSign,
-  //   //   color: "bg-purple-600",
-  //   //   owned: false,
-  //   //   createdByUser: false,
-  //   //   liked: true,
-  //   //   redirectUrl: "/agent/trading",
-  //   //   agentId: 1003,
-  //   // }
-  // ]
-
   // Capability to icon mapping
   const getIconForCapabilities = (capabilities) => {
     if (capabilities.includes('coding') || capabilities.includes('debugging')) return Code
@@ -274,37 +187,7 @@ const MarketplacePage = () => {
     return 'bg-gray-600'
   }
 
-  // Transform API agents to match our format
-  // const transformApiAgent = (agent, isOwned = false, isCreated = false) => ({
-  //   // The DATABASE ID, used for keys and URL links
-  //   id: agent.id, 
-    
-  //   // The ON-CHAIN ID from the blockchain, used for payments
-  //   agentId: agent.agentId, 
-
-  //   name: agent.name,
-  //   description: agent.description,
-  //   price: agent.price ? `${agent.price} Zlag` : "50 Zlag",
-
-  //   // NEW: Store the FULL creator address for filtering and logic
-  //   creatorAddress: agent.creator ? agent.creator.walletAddress : null,
-
-  //   // KEEP: The shortened address for display purposes only
-  //   creator: agent.creator ? agent.creator.walletAddress.slice(0, 8) + '...' : "Community",
-    
-  //   rating: (4.0 + Math.random() * 1.0),
-  //   users: `${(Math.random() * 10 + 1).toFixed(1)}k`,
-  //   downloads: `${(Math.random() * 30 + 5).toFixed(1)}k`,
-  //   trending: Math.random() > 0.7,
-  //   tags: agent.capabilities ? agent.capabilities.slice(0, 3) : ['AI', 'Bot', 'Helper'],
-  //   icon: getIconForCapabilities(agent.capabilities || []),
-  //   color: getColorForCapabilities(agent.capabilities || []),
-  //   owned: isOwned,
-  //   createdByUser: isCreated,
-  //   liked: Math.random() > 0.5,
-  //   redirectUrl: `/agent/${agent.id}`,
-  //   isFree: agent.price === 0 || agent.price === 'Free' // Check if it's free
-  // });
+ 
   const transformApiAgent = (agent, isOwned = false, isCreated = false) => {
     // Determine the full creator address from multiple possible structures
     const fullCreatorAddress = (agent.creator ? agent.creator.walletAddress : agent.creatorWalletAddress) || null;
@@ -362,9 +245,6 @@ const MarketplacePage = () => {
           fetch(`https://zlag-ownable-service.vercel.app/api/users/${userAddress}/owned-agents`),
           fetch(`https://zlag-ownable-service.vercel.app/api/users/${userAddress}/created-agents`)
         ]);
-
-        let allAgentsData = [];
-        let ownedAgentIds = new Set();
         let createdAgentCreatorAddresses = new Set();
 
         // Process owned agents first
@@ -421,38 +301,6 @@ const MarketplacePage = () => {
     fetchAgents();
   }, [userAddress, isConnected]); // The dependencies are correct
 
-   // ✅ STEP 2: LOG THE STATE VARIABLE HERE, OUTSIDE THE USEEFFECT
-  // console.log("📦 Current 'createdAgents' state:", createdAgents);
-
-
-// --- CORRECTED FILTERING LOGIC ---
-  // const getFilteredAgents = () => {
-  //   let agentsToShow = [];
-    
-  //   switch (selectedFilter) {
-  //     case 'owned':
-  //       // Filter the ownedAgents list based on the user's wallet
-  //       agentsToShow = ownedAgents;
-  //       break;
-  //     case 'created':
-  //       // FIX: Compare against the full creatorAddress
-  //       agentsToShow = createdAgents.filter(agent => agent.creatorAddress === userAddress);
-  //       break;
-  //     default:
-  //       // For 'all', show featured and API agents
-  //       const allAvailableAgents = [...apiAgents];
-  //       // FIX: Compare against the full creatorAddress to hide your own agents from the 'buy' list
-  //       agentsToShow = allAvailableAgents.filter(agent => agent.creatorAddress !== userAddress);
-  //       break;
-  //   }
-
-  //   // Apply the search term to the already filtered list
-  //   return agentsToShow.filter(agent =>
-  //     agent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  //     agent.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  //     (agent.tags && agent.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())))
-  //   );
-  // };
 
   // --- FINAL CORRECTED FILTERING LOGIC ---
   const getFilteredAgents = () => {
@@ -541,7 +389,7 @@ const MarketplacePage = () => {
       }}></div>
 
       {/* Header */}
-      <div className="relative bg-black/60 backdrop-blur-md border-b border-purple-900/30 sticky top-0 z-10">
+      <div className=" bg-black/60 backdrop-blur-md border-b border-purple-900/30 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-purple-200 to-purple-400 bg-clip-text text-transparent">

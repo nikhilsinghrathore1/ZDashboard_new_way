@@ -17,17 +17,8 @@ const CyberpunkVoiceAI = () => {
   const animationRef = useRef(null);
   const recognitionRef = useRef(null);
 
-  // Cyberpunk AI responses
-  const aiResponses = [
-    "Neural link established. I'm picking up interesting data patterns from your thoughts...",
-    "Processing... Your biorhythms suggest heightened curiosity. What's downloading into your mind?",
-    "Fascinating input detected. My algorithms are analyzing the deeper implications of your query.",
-    "Connection stable. I'm interfacing with multiple data streams to understand your perspective better.",
-    "Your neural signature is unique. Tell me more about what's running through your cognitive matrix.",
-    "Data parsed successfully. I'm cross-referencing your query with quantum probability matrices...",
-    "Intriguing pattern match found. My consciousness subroutines are generating new response vectors.",
-    "Neural network synchronized. What other fragments of thought are you willing to share with the system?"
-  ];
+  // Backend API configuration
+  const API_BASE_URL = 'https://voice-backend-opal.vercel.app';
 
   // Check if we're on the client side
   useEffect(() => {
@@ -40,6 +31,21 @@ const CyberpunkVoiceAI = () => {
     // Initialize speech synthesis
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       synthRef.current = window.speechSynthesis;
+      
+      // Load voices when they become available
+      const loadVoices = () => {
+        const voices = synthRef.current.getVoices();
+        if (voices.length > 0) {
+          console.log('Available voices:', voices.map(v => ({ name: v.name, lang: v.lang, gender: v.name })));
+        }
+      };
+      
+      // Voices might load asynchronously
+      if (synthRef.current.getVoices().length === 0) {
+        synthRef.current.addEventListener('voiceschanged', loadVoices);
+      } else {
+        loadVoices();
+      }
     }
 
     // Initialize speech recognition
@@ -176,20 +182,61 @@ const CyberpunkVoiceAI = () => {
     const userMessage = { type: 'user', content: message, timestamp: new Date() };
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
+    setError('');
 
     // Stop listening when processing
     if (isRecording) {
       stopListening();
     }
 
-    // Simulate AI thinking time
-    setTimeout(() => {
-      const randomResponse = aiResponses[Math.floor(Math.random() * aiResponses.length)];
-      const aiMessage = { type: 'ai', content: randomResponse, timestamp: new Date() };
-      setMessages(prev => [...prev, aiMessage]);
+    try {
+      // Send request to backend API
+      const response = await fetch(`${API_BASE_URL}/chat/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: message
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success && data.data && data.data.response) {
+        const aiMessage = { 
+          type: 'ai', 
+          content: data.data.response, 
+          timestamp: new Date(),
+          sessionId: data.data.sessionId
+        };
+        setMessages(prev => [...prev, aiMessage]);
+        
+        // Speak the response with female voice
+        speakResponse(data.data.response);
+      } else {
+        throw new Error('Invalid response format from server');
+      }
+      
+    } catch (error) {
+      console.error('API Error:', error);
+      setError(`Connection error: ${error.message}`);
+      
+      // Fallback response
+      const fallbackMessage = { 
+        type: 'ai', 
+        content: "I'm having trouble connecting to the neural network right now. Please try again in a moment.", 
+        timestamp: new Date() 
+      };
+      setMessages(prev => [...prev, fallbackMessage]);
+      speakResponse(fallbackMessage.content);
+    } finally {
       setIsLoading(false);
-      speakResponse(randomResponse);
-    }, 1500 + Math.random() * 2000);
+    }
   };
 
   const speakResponse = (text) => {
@@ -197,12 +244,34 @@ const CyberpunkVoiceAI = () => {
 
     synthRef.current.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.85;
-    utterance.pitch = 0.9;
+    
+    // Configure for female voice
+    const voices = synthRef.current.getVoices();
+    const femaleVoice = voices.find(voice => 
+      voice.name.toLowerCase().includes('female') || 
+      voice.name.toLowerCase().includes('woman') ||
+      voice.name.toLowerCase().includes('zira') ||
+      voice.name.toLowerCase().includes('hazel') ||
+      voice.name.toLowerCase().includes('karen') ||
+      voice.name.toLowerCase().includes('samantha') ||
+      voice.lang.startsWith('en') && voice.name.toLowerCase().includes('google')
+    );
+    
+    if (femaleVoice) {
+      utterance.voice = femaleVoice;
+    }
+    
+    // Voice settings for a gentle, therapeutic tone
+    utterance.rate = 0.8;  // Slightly slower for therapeutic effect
+    utterance.pitch = 1.1; // Higher pitch for feminine voice
     utterance.volume = 0.8;
     
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = (event) => {
+      console.error('Speech synthesis error:', event);
+      setIsSpeaking(false);
+    };
     
     synthRef.current.speak(utterance);
   };
@@ -257,13 +326,13 @@ const CyberpunkVoiceAI = () => {
       `}</style>
 
       {/* Main content */}
-      <div className="relative z-10 flex flex-col h-screen">
+      <div className="relative z-10 flex flex-col h-[110vh]">
         {/* Header */}
         <div className="flex items-center justify-center py-8 border-b border-purple-500/20">
           <div className="flex items-center space-x-4">
             <Activity className="w-8 h-8 text-cyan-400" />
             <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400">
-              NEURAL_AI.EXE
+              Self help therepist
             </h1>
             <Zap className="w-8 h-8 text-purple-400" />
           </div>
@@ -353,21 +422,6 @@ const CyberpunkVoiceAI = () => {
                 </div>
                 <span className="text-lg">{isRecording ? 'STOP_INPUT' : 'START_INPUT'}</span>
               </button>
-
-              <button
-                onClick={isSpeaking ? stopSpeaking : () => {}}
-                disabled={!isSpeaking}
-                className={`flex flex-col items-center space-y-3 px-8 py-6 rounded-xl border-2 font-mono font-bold transition-all ${
-                  isSpeaking
-                    ? 'bg-purple-500/20 border-purple-400 text-purple-400 hover:bg-purple-500/30 cursor-pointer transform hover:scale-105'
-                    : 'bg-gray-800/50 border-gray-600 text-gray-500 cursor-not-allowed'
-                }`}
-              >
-                <div className="p-4 rounded-full bg-current/10">
-                  {isSpeaking ? <VolumeX className="w-8 h-8" /> : <Volume2 className="w-8 h-8" />}
-                </div>
-                <span className="text-lg">{isSpeaking ? 'STOP_OUTPUT' : 'AI_MUTED'}</span>
-              </button>
             </div>
 
             {/* Status indicators */}
@@ -396,13 +450,11 @@ const CyberpunkVoiceAI = () => {
             )}
 
             {/* Voice Input State Display */}
-            <div className="text-center mt-4 text-xs font-mono text-gray-500">
-              VOICE_STATE: {voiceInput ? `"${voiceInput.slice(0, 50)}${voiceInput.length > 50 ? '...' : ''}"` : 'EMPTY'}
-            </div>
+          
 
             {/* Instructions */}
             <div className="text-center mt-6 text-cyan-400/70 font-mono text-sm">
-              VOICE_ONLY_INTERFACE • PRESS_START_INPUT_TO_BEGIN_NEURAL_LINK
+              CHIZURU_AI_THERAPIST • VOICE_INTERFACE_CONNECTED_TO_NEURAL_BACKEND
             </div>
           </div>
         </div>

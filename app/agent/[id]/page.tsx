@@ -41,6 +41,10 @@ const AgentChatPage: React.FC = () => {
   const [isRateLimited, setIsRateLimited] = useState<boolean>(false);
   const [rateLimitMessage, setRateLimitMessage] = useState<string>("");
 
+  // Ownership check states
+  const [isCheckingOwnership, setIsCheckingOwnership] = useState<boolean>(true);
+  const [ownershipError, setOwnershipError] = useState<string>("");
+
   // Check rate limit on component mount
   useEffect(() => {
     const storedCount = parseInt(localStorage.getItem('agentChatRequestCount') || '0');
@@ -86,10 +90,87 @@ const AgentChatPage: React.FC = () => {
     }
   }, []);
 
+  // Check agent ownership
+  useEffect(() => {
+    const checkAgentOwnership = async () => {
+      if (!agentId) {
+        setIsCheckingOwnership(false);
+        return;
+      }
+
+      try {
+        setIsCheckingOwnership(true);
+        setOwnershipError("");
+
+        // Get wallet address from localStorage or your auth system
+        const walletAddress = localStorage.getItem('walletAddress');
+        
+        if (!walletAddress) {
+          console.log('No wallet address found, redirecting to marketplace');
+          window.location.href = '/marketplace';
+          return;
+        }
+
+        console.log(`Checking ownership for agent ${agentId} and wallet ${walletAddress}`);
+
+        const response = await fetch(
+          `https://create-agent-backend.vercel.app/api/check-ownership/${walletAddress}/${agentId}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Ownership check failed with status: ${response.status}`);
+        }
+
+        const ownershipData = await response.json();
+        console.log('Ownership check response:', ownershipData);
+
+        if (!ownershipData.success) {
+          throw new Error(ownershipData.error || 'Failed to check ownership');
+        }
+
+        // If user doesn't own the agent, redirect to marketplace
+        if (!ownershipData.owns) {
+          console.log('User does not own this agent, redirecting to marketplace');
+          setOwnershipError('You do not own this agent');
+          
+          // Small delay to show error message before redirect
+          setTimeout(() => {
+            window.location.href = '/marketplace';
+          }, 1500);
+          return;
+        }
+
+        console.log('Ownership verified - user owns this agent');
+        
+      } catch (error: any) {
+        console.error('Error checking agent ownership:', error);
+        setOwnershipError(error.message || 'Failed to verify ownership');
+        
+        // On error, redirect to marketplace after showing error
+        setTimeout(() => {
+          window.location.href = '/marketplace';
+        }, 2000);
+      } finally {
+        setIsCheckingOwnership(false);
+      }
+    };
+
+    // Only run ownership check if we have agentId
+    if (agentId) {
+      checkAgentOwnership();
+    }
+  }, [agentId]);
+
   // Fetch agent details from API
   useEffect(() => {
     const fetchAgentDetails = async () => {
-      if (!agentId) return;
+      if (!agentId || isCheckingOwnership) return;
 
       setIsLoadingAgent(true);
       setError("");
@@ -158,7 +239,7 @@ const AgentChatPage: React.FC = () => {
     };
 
     fetchAgentDetails();
-  }, [agentId]);
+  }, [agentId, isCheckingOwnership]);
 
   // Auto scroll to bottom
   useEffect(() => {
@@ -400,8 +481,8 @@ Current user query: ${userMessage}
     </div>
   );
 
-  // Minimalistic Loading Screen
-  if (isLoadingAgent) {
+  // Updated loading screen to include ownership check
+  if (isLoadingAgent || isCheckingOwnership) {
     return (
       <div className="min-h-screen w-full bg-black flex items-center justify-center">
         <div className="text-center space-y-6">
@@ -413,13 +494,16 @@ Current user query: ${userMessage}
             </div>
           </div>
 
-          {/* Simple text */}
+          {/* Dynamic loading text */}
           <div className="space-y-2">
             <div className="text-purple-400 text-xl font-mono font-medium">
-              Loading Agent
+              {isCheckingOwnership ? "Verifying Access..." : "Loading Agent"}
             </div>
             {error && (
               <div className="text-red-400/80 text-sm font-mono">{error}</div>
+            )}
+            {ownershipError && (
+              <div className="text-red-400/80 text-sm font-mono">{ownershipError}</div>
             )}
           </div>
         </div>

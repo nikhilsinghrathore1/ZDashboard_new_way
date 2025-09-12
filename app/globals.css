@@ -19,6 +19,47 @@
   }
 }
 
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  * {
+    scroll-behavior: smooth;
+  }
+
+  /* Hide scrollbars for horizontal scroll areas */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Optimize transforms for better performance */
+  .transform-gpu {
+    transform: translateZ(0);
+    will-change: transform;
+  }
+
+  /* Optimize hover animations */
+  button {
+    will-change: transform;
+  }
+
+  /* Enable hardware acceleration for smooth scrolling */
+  body {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  /* Reduce paint and layout thrashing */
+  .performance-layer {
+    contain: layout style paint;
+  }
+
+
 
 body {
   background: var(--background);

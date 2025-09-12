@@ -13,12 +13,12 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       <BlockchainListener />
       
       <div className="w-full h-screen overflow-hidden bg-[#020817] flex">
-        <div className="w-[16.65%] h-full relative z-[1000000]">
+        <div className="lg:w-[16.65%] w-[0%] hidden lg:block  h-full relative z-[1000000]">
 
         <SideNavbar />
         </div>
 
-        <div className="w-[83.35%] h-full relative overflow-y-auto ">
+        <div className="lg:w-[83.35%] w-[100%]  h-full relative overflow-y-auto ">
           <TopNavbar />
           {children}
         </div>
