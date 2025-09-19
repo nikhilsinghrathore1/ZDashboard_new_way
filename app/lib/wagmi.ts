@@ -7,14 +7,15 @@ import { injected, metaMask, safe, walletConnect } from 'wagmi/connectors'
 const projectId = '81bd965ef6722331a6c12ed6611a18a4' // <-- PASTE YOURS HERE
 const alchemyAmoyRpcUrl = 'https://polygon-amoy.g.alchemy.com/v2/vaNXsjVhxRKHbxsDADJfz';
 // Make sure you add the new variable to your Vercel settings
-const alchemyBaseSepoliaRpcUrl = process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL;
+const alchemyBaseSepoliaRpcUrl = 'https://base-sepolia.g.alchemy.com/v2/U7Oi3BUH9b1uvMknFkyqp';
 
 
-// 
+console.log(alchemyBaseSepoliaRpcUrl)
+
 
 // 2. Create wagmi config
 export const config = createConfig({
-  chains: [mainnet, polygon, sepolia, polygonAmoy, baseSepolia], // The chains you want to support
+  chains: [mainnet, polygon, sepolia, polygonAmoy, baseSepolia], 
   connectors: [
     walletConnect({ projectId }),
     injected(), // Handles browser-injected wallets like MetaMask

@@ -44,7 +44,7 @@ const preloadedRoutes = {
     ssr: false,
     loading: () => <div>Loading...</div>
   }),
-  '/yourAgents': dynamic(() => import('../../app/page').catch(() => ({ default: () => <div>Error loading page</div> })), { 
+  '/Profile': dynamic(() => import('../../app/page').catch(() => ({ default: () => <div>Error loading page</div> })), { 
     ssr: false,
     loading: () => <div>Loading...</div>
   }),
@@ -84,7 +84,7 @@ const routeConfig = Object.freeze([
     icon: Zap,
     title: "Your Profile",
     subtitle: "working 24/7",
-    path: "/yourAgents",
+    path: "/Profile",
     priority: 'low' as const,
   },
 ]);

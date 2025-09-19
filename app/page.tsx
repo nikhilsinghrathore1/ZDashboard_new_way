@@ -41,7 +41,7 @@ const featuredAgentsData = [
     description: "autonomous code generator that builds dapp",
     price: "2.5 ZLAG",
     owner: "",
-    agentId: 3,
+    agentId: 1,
   },
   {
     url: "/agent/trading",
@@ -50,7 +50,7 @@ const featuredAgentsData = [
     description: "autonomous ai assistant that helps you trade",
     price: "2.5 ZLAG",
     owner: "",
-    agentId: 2,
+    agentId: 1,
   },
   {
     url: "/agent/pushit",
@@ -62,6 +62,8 @@ const featuredAgentsData = [
     agentId: 1,
   }
 ];
+
+console.log(featuredAgentsData)
 
 const statsData = [
   {
