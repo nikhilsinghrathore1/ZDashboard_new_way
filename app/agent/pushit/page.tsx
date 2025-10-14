@@ -28,7 +28,7 @@ const GitHubTrackerApp = () => {
   };
 
   const handleGitHubRedirect = () => {
-    window.open("https://github.com/apps/your-github-app", "_blank");
+    window.open("https://github.com/apps/readmepusher", "_blank");
   };
 
   return (

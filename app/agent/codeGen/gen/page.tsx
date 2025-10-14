@@ -12,90 +12,17 @@ import Extras from './data/Extras';
 import Extra from './data/Extra';
 import { sandpackDark } from "@codesandbox/sandpack-themes";
 
-// Constants to prevent recreating objects
-const RESET_DURATION = 24 * 60 * 60 * 1000; // 24 hours
-const STORAGE_KEYS = {
-  REQUEST_USED: 'codeGenRequestUsed',
-  REQUEST_TIMESTAMP: 'codeGenRequestTimestamp'
-} as const;
-
 // Memoized components to prevent unnecessary re-renders
-const StarField = memo(() => {
-  const stars = useMemo(() => {
-    const starArray = [];
-    
-    // Regular stars
-    for (let i = 0; i < 150; i++) {
-      starArray.push({
-        id: i,
-        type: 'regular',
-        left: Math.random() * 100,
-        top: Math.random() * 100,
-        animationDelay: Math.random() * 3,
-        animationDuration: 2 + Math.random() * 2,
-        opacity: 0.3 + Math.random() * 0.7,
-      });
-    }
-    
-    // Large stars
-    for (let i = 0; i < 30; i++) {
-      starArray.push({
-        id: `large-${i}`,
-        type: 'large',
-        left: Math.random() * 100,
-        top: Math.random() * 100,
-        animationDelay: Math.random() * 4,
-        animationDuration: 3 + Math.random() * 2,
-        opacity: 0.2 + Math.random() * 0.5,
-      });
-    }
-    
-    return starArray;
-  }, []);
-
-  return (
-    <div className="absolute inset-0 bg-black">
-      {stars.map((star) => (
-        <div
-          key={star.id}
-          className={`absolute rounded-full animate-pulse ${
-            star.type === 'large' ? 'w-2 h-2 bg-purple-300' : 'w-1 h-1 bg-white'
-          }`}
-          style={{
-            left: `${star.left}%`,
-            top: `${star.top}%`,
-            animationDelay: `${star.animationDelay}s`,
-            animationDuration: `${star.animationDuration}s`,
-            opacity: star.opacity,
-          }}
-        />
-      ))}
-    </div>
-  );
-});
-StarField.displayName = 'StarField';
-
-const RateLimitBanner = memo(({ message }: { message: string }) => (
-  <div className="mb-2 text-center">
-    <span className="text-red-400 text-xs bg-red-900/30 px-3 py-1 rounded-full border border-red-500/30">
-      ⚠️ {message}
-    </span>
-  </div>
-));
-RateLimitBanner.displayName = 'RateLimitBanner';
-
-const StatusIndicator = memo(({ loading, hasUsedRequest }: { loading: boolean; hasUsedRequest: boolean }) => {
+const StatusIndicator = memo(({ loading }: { loading: boolean }) => {
   const statusColor = useMemo(() => {
     if (loading) return 'bg-yellow-400';
-    if (hasUsedRequest) return 'bg-red-400';
     return 'bg-purple-400';
-  }, [loading, hasUsedRequest]);
+  }, [loading]);
 
   const statusText = useMemo(() => {
     if (loading) return 'Processing';
-    if (hasUsedRequest) return 'Rate Limited';
     return 'Ready';
-  }, [loading, hasUsedRequest]);
+  }, [loading]);
 
   return (
     <div className="flex items-center gap-3 px-4">
@@ -114,7 +41,7 @@ const LoadingSpinner = memo(() => (
 ));
 LoadingSpinner.displayName = 'LoadingSpinner';
 
-const SandpackEditor = memo(({ files }: { files: any }) => {
+const SandpackEditor = memo(({ files, showPreview }: { files: any; showPreview: boolean }) => {
   const sandpackOptions = useMemo(() => ({
     externalResources: ["https://cdn.tailwindcss.com"],
   }), []);
@@ -127,7 +54,7 @@ const SandpackEditor = memo(({ files }: { files: any }) => {
 
   return (
     <SandpackProvider
-      className="relative w-full h-[70%]"
+      className="relative w-full h-full"
       files={files}
       theme={sandpackDark}
       customSetup={customSetup}
@@ -135,13 +62,26 @@ const SandpackEditor = memo(({ files }: { files: any }) => {
       template="react"
     >
       <SandpackLayout>
-        <SandpackFileExplorer style={{ height: "71vh" }} />
-        <SandpackCodeEditor
-          style={{ height: "71vh", fontSize: "13px", lineHeight: "1.6" }}
-        />
-        <div className="preview-container absolute w-full top-0 left-0 transition-all duration-500 ease-in-out">
+        <div className={`transition-all duration-500 ease-in-out w-fit`}>
+          <SandpackFileExplorer
+           style={{ height: "63vh" , width:"170px" } } />
+        </div>
+          <SandpackCodeEditor
+            style={{ height: "63vh", fontSize: "13px", lineHeight: "1.6" , width:"100%" }}
+          />
+
+    
+        <div 
+          className={`absolute top-0 right-0 h-full transition-all duration-500 ease-in-out ${
+            showPreview ? 'translate-x-0 w-full' : 'translate-x-full w-1/2'
+          }`}
+          style={{ 
+            backgroundColor: '#151515',
+            zIndex: 10
+          }}
+        >
           <SandpackPreview
-            className="w-full"
+            className="w-full h-full"
             showNavigator={false}
             style={{ height: "71vh" }}
           />
@@ -152,18 +92,16 @@ const SandpackEditor = memo(({ files }: { files: any }) => {
 });
 SandpackEditor.displayName = 'SandpackEditor';
 
-const StatusBar = memo(({ loading, hasUsedRequest }: { loading: boolean; hasUsedRequest: boolean }) => {
+const StatusBar = memo(({ loading }: { loading: boolean }) => {
   const statusText = useMemo(() => {
     if (loading) return 'Processing';
-    if (hasUsedRequest) return 'Rate Limited';
     return 'Ready';
-  }, [loading, hasUsedRequest]);
+  }, [loading]);
 
   const statusColor = useMemo(() => {
     if (loading) return 'bg-yellow-400';
-    if (hasUsedRequest) return 'bg-red-400';
     return 'bg-purple-400';
-  }, [loading, hasUsedRequest]);
+  }, [loading]);
 
   return (
     <div className="mt-3 flex items-center justify-between text-xs text-gray-400">
@@ -186,40 +124,12 @@ const CodeGenPage = () => {
   const [userInput, setUserInput] = useState('');
   const [files, setFiles] = useState(Extras.DEFAULT_FILE);
   const [loading, setLoading] = useState(false);
-  const [hasUsedRequest, setHasUsedRequest] = useState(false);
-  const [rateLimitMessage, setRateLimitMessage] = useState('');
   const [isUpdatingUI, setIsUpdatingUI] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   
   const hasInitialized = useRef(false);
   const abortController = useRef<AbortController | null>(null);
   const hasUpdatedUI = useRef(false); // Track if UI update has been called
-
-  // Memoized rate limit checker
-  const checkRateLimit = useCallback(() => {
-    const requestUsed = JSON.parse(localStorage.getItem(STORAGE_KEYS.REQUEST_USED) || 'false');
-    const requestTimestamp = localStorage.getItem(STORAGE_KEYS.REQUEST_TIMESTAMP);
-    
-    if (requestUsed && requestTimestamp) {
-      const now = Date.now();
-      const requestTime = parseInt(requestTimestamp);
-      const timeDiff = now - requestTime;
-      
-      if (timeDiff < RESET_DURATION) {
-        const remainingTime = Math.ceil((RESET_DURATION - timeDiff) / (60 * 60 * 1000));
-        setHasUsedRequest(true);
-        setRateLimitMessage(`Rate limit exceeded. Try again in ${remainingTime} hours.`);
-        return false;
-      } else {
-        // Reset if 24 hours have passed
-        localStorage.removeItem(STORAGE_KEYS.REQUEST_USED);
-        localStorage.removeItem(STORAGE_KEYS.REQUEST_TIMESTAMP);
-        setHasUsedRequest(false);
-        setRateLimitMessage('');
-        return false;
-      }
-    }
-    return false;
-  }, []);
 
   // New function to update App.js UI
   const updateAppJsUI = useCallback(async (currentFiles: any) => {
@@ -231,7 +141,7 @@ const CodeGenPage = () => {
     setIsUpdatingUI(true);
     
     try {
-      const response = await axios.post('http://localhost:4000/code/updateCode', {
+      const response = await axios.post('https://ethback.vercel.app/code/updateCode', {
         file: JSON.stringify(currentFiles['/App.js'])  
       });
       
@@ -258,8 +168,8 @@ const CodeGenPage = () => {
 
   // Optimized API call with abort controller for cleanup
   const generateCode = useCallback(async (promptText: string) => {
-    if (hasUsedRequest || !promptText.trim()) {
-      console.log("Rate limit exceeded or empty prompt");
+    if (!promptText.trim()) {
+      console.log("Empty prompt");
       return;
     }
 
@@ -272,6 +182,7 @@ const CodeGenPage = () => {
     
     console.log("Generating code for prompt:", promptText);
     setLoading(true);
+    setShowPreview(false); // Hide preview when generating new code
     hasUpdatedUI.current = false; // Reset UI update flag
          
     try {
@@ -281,7 +192,7 @@ const CodeGenPage = () => {
       };
       
       const result = await axios.post(
-        `http://localhost:4000/code/genCode`, 
+        `https://ethback.vercel.app/code/genCode`, 
         payload,
         { signal: abortController.current.signal }
       );
@@ -300,12 +211,6 @@ const CodeGenPage = () => {
       
       setFiles(currentFiles);
       
-      // Mark request as used
-      setHasUsedRequest(true);
-      localStorage.setItem(STORAGE_KEYS.REQUEST_USED, 'true');
-      localStorage.setItem(STORAGE_KEYS.REQUEST_TIMESTAMP, Date.now().toString());
-      setRateLimitMessage('Request limit reached. You can make another request in 24 hours.');
-      
     } catch (err) {
       if (axios.isCancel(err)) {
         console.log('Request cancelled');
@@ -316,27 +221,24 @@ const CodeGenPage = () => {
       setLoading(false);
       abortController.current = null;
     }
-  }, [hasUsedRequest, updateAppJsUI]);
+  }, [updateAppJsUI]);
 
   // Initialize component and check URL params
   useEffect(() => {
     if (hasInitialized.current) return;
     
-    // Check rate limit first
-    const isRateLimited = checkRateLimit();
-    
     // Extract prompt from URL
     const urlParams = new URLSearchParams(window.location.search);
     const extractedPrompt = urlParams.get('prompt');
     
-    if (extractedPrompt && !isRateLimited) {
+    if (extractedPrompt) {
       const decodedPrompt = decodeURIComponent(extractedPrompt);
       setPrompt(decodedPrompt);
       generateCode(decodedPrompt);
     }
     
     hasInitialized.current = true;
-  }, [checkRateLimit, generateCode]);
+  }, [generateCode]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -353,15 +255,15 @@ const CodeGenPage = () => {
   }, []);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !loading && !hasUsedRequest && userInput.trim()) {
+    if (e.key === 'Enter' && !loading && userInput.trim()) {
       e.preventDefault();
       handleInputSubmit();
     }
-  }, [loading, hasUsedRequest, userInput]);
+  }, [loading, userInput]);
 
   const handleInputSubmit = useCallback(() => {
-    if (hasUsedRequest || !userInput.trim() || loading) {
-      console.log('Cannot submit:', { hasUsedRequest, userInput: userInput.trim(), loading });
+    if (!userInput.trim() || loading) {
+      console.log('Cannot submit:', { userInput: userInput.trim(), loading });
       return;
     }
 
@@ -370,34 +272,33 @@ const CodeGenPage = () => {
     setPrompt(newPrompt);
     generateCode(newPrompt);
     setUserInput('');
-  }, [hasUsedRequest, userInput, loading, generateCode]);
+  }, [userInput, loading, generateCode]);
+
+  // Handle preview toggle
+  const handlePreviewToggle = useCallback(() => {
+    setShowPreview(prev => !prev);
+  }, []);
 
   // Memoized placeholder text
   const placeholderText = useMemo(() => {
-    return hasUsedRequest ? "Rate limit exceeded..." : "Describe what you want to build...";
-  }, [hasUsedRequest]);
+    return "Describe what you want to build...";
+  }, []);
 
   // Memoized button text
   const buttonText = useMemo(() => {
     if (loading) return 'Processing...';
     if (isUpdatingUI) return 'Enhancing UI...';
-    if (hasUsedRequest) return 'Limited';
     return 'Generate';
-  }, [loading, isUpdatingUI, hasUsedRequest]);
+  }, [loading, isUpdatingUI]);
 
   // Memoized button disabled state
   const isButtonDisabled = useMemo(() => {
-    return loading || isUpdatingUI || !userInput.trim() || hasUsedRequest;
-  }, [loading, isUpdatingUI, userInput, hasUsedRequest]);
+    return loading || isUpdatingUI || !userInput.trim();
+  }, [loading, isUpdatingUI, userInput]);
 
   return (
     <div className="min-h-screen bg-black text-white font-sans relative overflow-hidden">
-      <StarField />
-
       <div className="relative z-10 px-8 pb-8 pt-5 h-screen flex flex-col">
-        {/* Rate limit notification */}
-        {hasUsedRequest && <RateLimitBanner message={rateLimitMessage} />}
-        
         {/* UI Update notification */}
         {isUpdatingUI && (
           <div className="mb-2 text-center">
@@ -410,9 +311,6 @@ const CodeGenPage = () => {
         {/* Main code editor area */}
         <div className="flex-1 h-[50%] mb-8 relative">
           <div className="h-full bg-gray-900/80 border border-purple-500/30 rounded-2xl backdrop-blur-sm relative overflow-hidden shadow-2xl">
-            {/* Hidden checkbox for toggle control */}
-            <input type="checkbox" id="preview-toggle" className="hidden" />
-            
             {/* Code editor header */}
             <div className="bg-gray-800/60 border-b border-purple-500/20 py-2 px-4 flex items-center justify-between rounded-t-2xl">
               <div className="flex items-center gap-3">
@@ -426,22 +324,25 @@ const CodeGenPage = () => {
                   </span>
                 )}
               </div>
-              <label
-                htmlFor="preview-toggle"
-                className="px-6 py-2 border border-purple-500/50 rounded-xl font-medium text-sm transition-all duration-300 cursor-pointer bg-gray-800/50 text-purple-300 hover:border-purple-400 hover:bg-purple-500/10"
+              <button
+                onClick={handlePreviewToggle}
+                className={`px-6 py-2 border rounded-xl font-medium text-sm transition-all duration-300 cursor-pointer ${
+                  showPreview
+                    ? 'bg-purple-500/20 border-purple-400 text-purple-200 shadow-[0_0_20px_rgba(147,51,234,0.3)]'
+                    : 'bg-gray-800/50 border-purple-500/50 text-purple-300 hover:border-purple-400 hover:bg-purple-500/10'
+                }`}
               >
-                <span className="toggle-text-show">▶ Show Preview</span>
-                <span className="toggle-text-hide hidden">◀ Hide Preview</span>
-              </label>
+                {showPreview ? '◀ Hide Preview' : '▶ Show Preview'}
+              </button>
             </div>
 
             {/* Code editor content */}
-            <div className="h-full bg-gray-900/20 flex items-center justify-center">
+            <div className="h-full bg-gray-900/20 flex items-center justify-center relative overflow-hidden">
               {(loading || isUpdatingUI) ? (
                 <LoadingSpinner />
               ) : (
                 <div className="relative w-full h-full">
-                  <SandpackEditor files={files} />
+                  <SandpackEditor files={files} showPreview={showPreview} />
                 </div>
               )}
             </div>
@@ -453,7 +354,7 @@ const CodeGenPage = () => {
           <div className="relative">
             <div className="bg-gray-900/70 border border-purple-500/30 rounded-2xl backdrop-blur-sm overflow-hidden shadow-xl">
               <div className="flex items-center p-4">
-                <StatusIndicator loading={loading || isUpdatingUI} hasUsedRequest={hasUsedRequest} />
+                <StatusIndicator loading={loading || isUpdatingUI} />
                 
                 <input
                   type="text"
@@ -462,7 +363,7 @@ const CodeGenPage = () => {
                   onKeyDown={handleKeyDown}
                   placeholder={placeholderText}
                   className="flex-1 bg-transparent text-white placeholder-gray-400 outline-none px-3 py-3 text-sm"
-                  disabled={loading || isUpdatingUI || hasUsedRequest}
+                  disabled={loading || isUpdatingUI}
                   autoComplete="off"
                 />
                 
@@ -478,7 +379,7 @@ const CodeGenPage = () => {
             </div>
           </div>
 
-          <StatusBar loading={loading || isUpdatingUI} hasUsedRequest={hasUsedRequest} />
+          <StatusBar loading={loading || isUpdatingUI} />
         </div>
 
         {/* Display current prompt for debugging */}
@@ -489,70 +390,19 @@ const CodeGenPage = () => {
         )}
       </div>
 
-      {/* Optimized CSS - moved to separate component to prevent recalculation */}
-      <OptimizedStyles />
+      {/* Optimized CSS */}
+      <style jsx>{`
+        /* Optimized animations */
+        .animate-spin {
+          will-change: transform;
+        }
+        
+        .animate-pulse {
+          will-change: opacity;
+        }
+      `}</style>
     </div>
   );
 };
-
-// Separate styles component to prevent recreation
-const OptimizedStyles = memo(() => (
-  <style jsx>{`
-    /* Preview toggle animations */
-    .preview-container {
-      transform: translateX(100%);
-    }
-    
-    #preview-toggle:checked ~ * .preview-container {
-      transform: translateX(0);
-    }
-    
-    #preview-toggle:checked ~ * label[for="preview-toggle"] {
-      background-color: rgba(147, 51, 234, 0.2) !important;
-      border-color: rgb(196, 125, 245) !important;
-      color: rgb(221, 170, 254) !important;
-      box-shadow: 0 0 20px rgba(147, 51, 234, 0.3) !important;
-    }
-    
-    #preview-toggle:checked ~ * .toggle-text-show {
-      display: none !important;
-    }
-    
-    #preview-toggle:checked ~ * .toggle-text-hide {
-      display: inline !important;
-    }
-    
-    #preview-toggle:not(:checked) ~ * .toggle-text-show {
-      display: inline !important;
-    }
-    
-    #preview-toggle:not(:checked) ~ * .toggle-text-hide {
-      display: none !important;
-    }
-
-    /* Optimized animations */
-    @keyframes twinkle {
-      0%, 100% { opacity: 0.3; }
-      50% { opacity: 1; }
-    }
-    
-    /* GPU-accelerated animations */
-    .animate-spin {
-      will-change: transform;
-    }
-    
-    .animate-pulse {
-      will-change: opacity;
-    }
-    
-    /* Improve rendering performance */
-    .preview-container {
-      will-change: transform;
-      backface-visibility: hidden;
-      transform-style: preserve-3d;
-    }
-  `}</style>
-));
-OptimizedStyles.displayName = 'OptimizedStyles';
 
 export default CodeGenPage;

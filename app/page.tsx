@@ -20,7 +20,6 @@ import Card from "./components/Card";
 import img from "../public/coderAgent.webp";
 import img1 from "../public/gimg2.webp";
 import img2 from "../public/finAgent.webp";
-import img3 from "../public/videogen.png";
 import AiAgentsCard from "./components/AiAgentsCard";
 import BadgeCard from "./components/Badge";
 import MainFooter from "./components/MainFooter";

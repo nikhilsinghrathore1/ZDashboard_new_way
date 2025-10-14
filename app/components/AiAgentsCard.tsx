@@ -328,18 +328,19 @@ const AiAgentsCard: React.FC<AiAgentsCardProps> = memo(({
       e.stopPropagation();
     }
 
-    // if (isFreeAgent) {
-    //   // if (freeAgentUrl === "/3000") {
-    //   //   window.location.href = "https://auditor-chi.vercel.app";
-    //   //   return;
-    //   // }
-    //   if (freeAgentUrl === "/3000") {
-    //     window.location.href = "https://t.me/ApeDigest_Bot";
-    //     return;
-    //   }
-    //   router.push(freeAgentUrl);
-    //   return;  
-    // }
+    if (isFreeAgent) {
+      // if (freeAgentUrl === "/3000") {
+      //   window.location.href = "https://auditor-chi.vercel.app";
+      //   return;
+      // }
+      if (freeAgentUrl === "/3000") {
+        window.location.href = "https://t.me/ApeDigest_Bot";
+        return;
+      }
+      console.log("this is the free agent url , " , freeAgentUrl)
+      router.push(freeAgentUrl);
+      return;  
+    }
 
     setShowPaymentModal(true);
     setPaymentStep('payment');

@@ -1,6 +1,6 @@
 "use client"
 import React, { useState, useEffect } from 'react'
-import { Search, Star, Users, Download, TrendingUp, Bot, Code, MessageSquare, Image, Music, Brain, Heart, User, Crown, GitBranch, DollarSign, Zap, Wallet, ShoppingCart, X, Check, Loader } from 'lucide-react'
+import { Search, Star, Users, Download, TrendingUp, Bot, Code, MessageSquare, Image, Music, Brain, Heart, User, Crown, GitBranch, DollarSign, Zap, Wallet, ShoppingCart, X, Check, Loader, Send, BookOpen } from 'lucide-react'
 import { useAccount, useConnect, useDisconnect, useWriteContract, useWaitForTransactionReceipt, useWatchContractEvent } from 'wagmi'
 import { ethers } from 'ethers'
 
@@ -8,6 +8,54 @@ import { ethers } from 'ethers'
 import AgentPlatformABI from '../contracts/AgentPlatform.json';
 import ERC20ABI from '../contracts/erc20_abi.json';
 import { agentPlatformAddress, yourTokenAddress } from '../contracts/addresses';
+
+// Static agents that always appear
+const STATIC_AGENTS = [
+  {
+    id: 'telegram-crypto-bot',
+    agentId: 'static-telegram',
+    name: 'Crypto Signal Bot',
+    description: 'The most aggressive crypto trading signal bot. Get real-time alerts for pump opportunities, whale movements, and market manipulations.',
+    price: 'Free',
+    creator: 'Zlag Team',
+    creatorAddress: null,
+    rating: 4.9,
+    users: '15.2k',
+    downloads: '45.8k',
+    trending: true,
+    tags: ['Crypto', 'Trading', 'Signals', 'Telegram'],
+    icon: Send,
+    color: 'bg-blue-600',
+    owned: false,
+    createdByUser: false,
+    liked: true,
+    redirectUrl: 'https://t.me/ApeDigest_Bot', // Replace with actual Telegram bot link
+    isFree: true,
+    isStatic: true
+  },
+  {
+    id: 'yc-docs-bot',
+    agentId: 'static-yc',
+    name: 'YC Docs Assistant',
+    description: 'Your personal Y Combinator knowledge base. Get instant answers about startup advice, funding, growth strategies, and YC application tips.',
+    price: 'Free',
+    creator: 'Zlag Team',
+    creatorAddress: null,
+    rating: 4.8,
+    users: '8.7k',
+    downloads: '23.4k',
+    trending: true,
+    tags: ['YC', 'Startup', 'Docs', 'Business'],
+    icon: BookOpen,
+    color: 'bg-orange-600',
+    owned: false,
+    createdByUser: false,
+    liked: true,
+    redirectUrl: 'https://deckiq-dujmdaz6crcphu8rcabkkk.streamlit.app/', // Replace with actual route
+    isFree: true,
+    isStatic: true
+  }
+];
 
 const MarketplacePage = () => {
   const [searchTerm, setSearchTerm] = useState('')
@@ -21,7 +69,6 @@ const MarketplacePage = () => {
   // Purchase modal state
   const [showPurchaseModal, setShowPurchaseModal] = useState(false)
   const [selectedAgent, setSelectedAgent] = useState(null)
-  //const [purchasing, setPurchasing] = useState(false)
   const [purchaseSuccess, setPurchaseSuccess] = useState(false)
   const [purchaseError, setPurchaseError] = useState(null)
 
@@ -53,16 +100,12 @@ const MarketplacePage = () => {
     if (isApprovalConfirmed && selectedAgent) {
       // Check if agentId is a valid number (not undefined, null, etc.)
       if (typeof selectedAgent.agentId !== 'number' && typeof selectedAgent.agentId !== 'string') {
-          // console.error("❌ CRITICAL: Attempted to rent with an invalid agentId.", selectedAgent);
           setPurchaseError("Purchase failed: Agent ID is missing or invalid. Please contact support.");
           return; // Stop execution
       }
-      // console.log("✅ Approval confirmed! Now calling rentAgent...");
       const numericPrice = selectedAgent.price.split(' ')[0];
       const amountInWei = ethers.parseUnits(numericPrice, 18);
-
-      //  @ts-ignore
-      
+// @ts-ignore
       rentAgent({
         address: agentPlatformAddress,
         abi: AgentPlatformABI.abi,
@@ -80,12 +123,10 @@ const MarketplacePage = () => {
     abi: AgentPlatformABI.abi,
     eventName: 'RentalPaid',
     onLogs(logs) {
-      //  @ts-ignore
+    // @ts-ignore
       const userLog = logs.find(log => log.args.renter === userAddress && log.args.agentId.toString() === selectedAgent?.agentId.toString());
       if (userLog) {
-        //  @ts-ignore
-        console.log(`✅ Event: RentalPaid! Agent ID: ${userLog.args.agentId.toString()}`);
-        // Now that payment is confirmed on-chain, update the backend
+        // console.log(`✅ Event: RentalPaid! Agent ID: ${userLog.args.agentId.toString()}`);
         handleUpdateBackendAfterPurchase();
       }
     },
@@ -106,9 +147,7 @@ const MarketplacePage = () => {
       console.log("1️⃣ Requesting token approval for rental...");
       const numericPrice = selectedAgent.price.split(' ')[0];
       const amountInWei = ethers.parseUnits(numericPrice, 18);
-
-      //  @ts-ignore
-
+// @ts-ignore
       await approveTokens({
         address: yourTokenAddress,
         abi: ERC20ABI,
@@ -209,7 +248,6 @@ const MarketplacePage = () => {
       // KEEP: The shortened address for display purposes only
       creator: fullCreatorAddress ? fullCreatorAddress.slice(0, 8) + '...' : "Community",
       
-      // ... keep the rest of the function the same
       rating: (4.0 + Math.random() * 1.0),
       users: `${(Math.random() * 10 + 1).toFixed(1)}k`,
       downloads: `${(Math.random() * 30 + 5).toFixed(1)}k`,
@@ -221,7 +259,8 @@ const MarketplacePage = () => {
       createdByUser: isCreated,
       liked: Math.random() > 0.5,
       redirectUrl: `/agent/${agent.id}`,
-      isFree: agent.price === 0 || agent.price === 'Free'
+      isFree: agent.price === 0 || agent.price === 'Free',
+      isStatic: false
     };
   };
 
@@ -241,7 +280,7 @@ const MarketplacePage = () => {
 
         // Fetch all agents, owned agents, and created agents
         const [generalResponse, ownedResponse, createdResponse] = await Promise.all([
-          fetch('https://zlag-ownable-service.vercel.app/api/agents'), // Fetch all agents from your backend
+          fetch('https://zlag-ownable-service.vercel.app/api/agents'),
           fetch(`https://zlag-ownable-service.vercel.app/api/users/${userAddress}/owned-agents`),
           fetch(`https://zlag-ownable-service.vercel.app/api/users/${userAddress}/created-agents`)
         ]);
@@ -255,15 +294,12 @@ const MarketplacePage = () => {
             setOwnedAgents(transformedOwned);
             }
         } else {
-           setOwnedAgents([]); // Clear on error
+           setOwnedAgents([]);
         }
 
         // Process created agents
         if (createdResponse.ok) {
           const createdResult = await createdResponse.json();
-
-          // ✅ STEP 1: LOG THE RAW API DATA HERE
-          console.log("🕵️‍♂️ Raw data from /created-agents API:", createdResult);
 
           if (createdResult.success) {
             const transformedCreated = createdResult.agents.map(agent => transformApiAgent(agent, false, true));
@@ -273,7 +309,6 @@ const MarketplacePage = () => {
         }
 
         // Process all agents and filter out the ones already owned
-        // Process all agents
         if (generalResponse.ok) {
           const generalResult = await generalResponse.json();
           const ownedAgentIds = new Set(ownedAgents.map(a => a.id));
@@ -287,7 +322,7 @@ const MarketplacePage = () => {
             setApiAgents(allAgentsData);
           }
         } else {
-           setApiAgents([]); // Clear on error
+           setApiAgents([]);
         }
 
       } catch (err) {
@@ -299,7 +334,7 @@ const MarketplacePage = () => {
     };
 
     fetchAgents();
-  }, [userAddress, isConnected]); // The dependencies are correct
+  }, [userAddress, isConnected]);
 
 
   // --- FINAL CORRECTED FILTERING LOGIC ---
@@ -315,7 +350,8 @@ const MarketplacePage = () => {
         sourceArray = createdAgents;
         break;
       default: // 'all'
-        const allAvailable = [...apiAgents];
+        // Combine static agents with API agents
+        const allAvailable = [...STATIC_AGENTS, ...apiAgents];
         // In the 'all' view, filter out any agents created by the current user.
         if (userAddress) {
           const lowerCaseUserAddress = userAddress.toLowerCase();
@@ -343,9 +379,6 @@ const MarketplacePage = () => {
 
   const filteredAgents = getFilteredAgents();
 
-  // ✅ ADD THIS LOG HERE to see the final result before rendering
-  // console.log("✔️ Final filtered agents to be displayed:", filteredAgents);
-
   const filters = [
     { id: 'all', name: 'All Agents', icon: Bot },
     { id: 'owned', name: 'Agents You Own', icon: Heart },
@@ -353,6 +386,12 @@ const MarketplacePage = () => {
   ];
 
   const handleAgentClick = (agent) => {
+    // Handle static agents - redirect to their specific URLs
+    if (agent.isStatic) {
+      window.open(agent.redirectUrl, '_blank');
+      return;
+    }
+
     // Handle free agents or owned/created agents directly
     if (agent.owned || agent.createdByUser || agent.isFree) {
       if (agent.redirectUrl) {
@@ -599,15 +638,6 @@ const MarketplacePage = () => {
                     <div className="absolute inset-0 border-4 border-transparent border-t-purple-400 border-r-indigo-400 rounded-full animate-spin"></div>
                     <div className="absolute inset-2 border-3 border-transparent border-b-purple-500 border-l-indigo-500 rounded-full animate-spin" style={{animationDirection: 'reverse', animationDuration: '1.5s'}}></div>
                     <div className="absolute inset-6 bg-gradient-to-r from-purple-400 via-indigo-400 to-purple-500 rounded-full animate-pulse"></div>
-                    <div className="absolute inset-0 animate-spin" style={{animationDuration: '3s'}}>
-                      <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-purple-400 rounded-full shadow-lg shadow-purple-400/50"></div>
-                    </div>
-                    <div className="absolute inset-0 animate-spin" style={{animationDuration: '2s', animationDirection: 'reverse'}}>
-                      <div className="absolute top-1/2 -right-1 transform -translate-y-1/2 w-2 h-2 bg-indigo-400 rounded-full shadow-lg shadow-indigo-400/50"></div>
-                    </div>
-                    <div className="absolute inset-0 animate-spin" style={{animationDuration: '2.5s'}}>
-                      <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2.5 h-2.5 bg-purple-500 rounded-full shadow-lg shadow-purple-500/50"></div>
-                    </div>
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-indigo-500/20 to-purple-600/20 rounded-full blur-xl animate-pulse scale-150"></div>
                 </div>
@@ -709,14 +739,15 @@ const MarketplacePage = () => {
                             </div>
                             <div className="flex items-center gap-2 text-xs text-gray-400 font-medium">
                               <span>by {agent.creator}</span>
-                              <div className="relative group flex items-center">
-                                <span className="cursor-help text-gray-500 font-mono">ⓘ</span>
-                                {/* This is the tooltip that appears on hover */}
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-3 py-1.5 bg-gray-800 border border-purple-700/50 rounded-lg text-white text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                                  Agent ID: {agent.agentId}
-                                  <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-gray-800"></div>
+                              {!agent.isStatic && (
+                                <div className="relative group flex items-center">
+                                  <span className="cursor-help text-gray-500 font-mono">ⓘ</span>
+                                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-3 py-1.5 bg-gray-800 border border-purple-700/50 rounded-lg text-white text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                    Agent ID: {agent.agentId}
+                                    <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-gray-800"></div>
+                                  </div>
                                 </div>
-                              </div>
+                              )}
                             </div>
                           </div>
                           <button 

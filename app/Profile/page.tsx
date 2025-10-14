@@ -8,95 +8,86 @@ import {
   EyeOff,
   RefreshCw,
   TrendingUp,
-  Clock,
-  Shield,
   Zap,
   Activity,
   User,
   Settings,
   Award,
-  BarChart3,
-  Coins,
   Globe,
   CheckCircle,
   AlertCircle,
-  ArrowUpRight,
-  ArrowDownLeft,
-  Calendar,
 } from "lucide-react";
+import { useAccount, useConnect, useDisconnect, useReadContract } from 'wagmi';
+import img from "../../public/niko.webp"
 
-// Mock data for demonstration since wagmi hooks aren't available
-const mockData = {
-  address: "0x742d35Cc6635C0532925a3b8D57C7A2C9AF572B9",
-  isConnected: true,
-  isConnecting: false,
-  chain: { name: "Ethereum", id: 1 },
-  nativeBalance: { formatted: "2.456789", symbol: "ETH" },
-  zlagBalance: "1250000",
-  zlagDecimals: 18,
-  zlagSymbol: "ZLAG",
-  totalSupply: "10000000000000000000000000", // 10M tokens
-};
+// Import your contract info
+import ERC20ABI from '../contracts/erc20_abi.json';
+import { yourTokenAddress } from '../contracts/addresses';
+import Image from "next/image";
 
 const ProfilePage = () => {
   const [showPrivateData, setShowPrivateData] = useState(false);
   const [copiedAddress, setCopiedAddress] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  
+  // User state management
+  const [userProfile, setUserProfile] = useState(null);
+  const [ownedAgents, setOwnedAgents] = useState([]);
+  const [createdAgents, setCreatedAgents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [userState, setUserState] = useState({
     isCheckingUser: false,
     isCreatingUser: false,
-    userExists: true,
-    userChecked: true,
+    userExists: false,
+    userChecked: false,
   });
 
-  // Mock wallet connection state
-  const address = mockData.address;
-  const isConnected = mockData.isConnected;
-  const isConnecting = mockData.isConnecting;
-  const chain = mockData.chain;
-  const balanceData = mockData.nativeBalance;
-  const balanceLoading = false;
+  // Wagmi hooks for wallet connection
+  const { address, isConnected, chain } = useAccount();
+  const { connect, connectors, isPending } = useConnect();
+  const { disconnect } = useDisconnect();
 
-  // Mock contract data
-  const zlagBalanceData = BigInt(mockData.zlagBalance + "000000000000000000"); // Add 18 decimals
-  const zlagBalanceLoading = false;
-  const zlagDecimals = mockData.zlagDecimals;
-  const zlagSymbol = mockData.zlagSymbol;
-  const totalSupply = BigInt(mockData.totalSupply);
-
-  // Mock activity data
-  const activityData = [
-    {
-      id: 1,
-      type: "received",
-      token: "ZLAG",
-      amount: "1,250",
-      from: "0x1234...5678",
-      timestamp: "2 hours ago",
-      txHash: "0xabc123...def456",
-    },
-    {
-      id: 2,
-      type: "sent",
-      token: "ETH",
-      amount: "0.125",
-      to: "0x9876...4321",
-      timestamp: "1 day ago",
-      txHash: "0xdef456...abc123",
-    },
-    {
-      id: 3,
-      type: "received",
-      token: "ETH",
-      amount: "2.5",
-      from: "0x5555...7777",
-      timestamp: "3 days ago",
-      txHash: "0x789abc...456def",
-    },
-  ];
+  // ZLAG token balance
+  const { data: zlagBalance, isLoading: zlagBalanceLoading, refetch: refetchZlagBalance } = useReadContract({
+    address: yourTokenAddress,
+    abi: ERC20ABI,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+    // @ts-ignore
+    enabled: !!address,
+  });
+  
+  // ZLAG token decimals
+  const { data: zlagDecimals } = useReadContract({
+    address: yourTokenAddress,
+    abi: ERC20ABI,
+    functionName: 'decimals',
+    // @ts-ignore
+    enabled: !!address,
+  });
+  
+  // ZLAG token symbol
+  const { data: zlagSymbol } = useReadContract({
+    address: yourTokenAddress,
+    abi: ERC20ABI,
+    functionName: 'symbol',
+    // @ts-ignore
+    enabled: !!address,
+  });
+  
+  // ZLAG total supply
+  const { data: totalSupply } = useReadContract({
+    address: yourTokenAddress,
+    abi: ERC20ABI,
+    functionName: 'totalSupply',
+    // @ts-ignore
+    enabled: !!address,
+  });
 
   // Helper function to format units
   const formatUnits = (value, decimals) => {
+    if (!value || !decimals) return "0";
     const divisor = BigInt(10 ** decimals);
     const quotient = value / divisor;
     const remainder = value % divisor;
@@ -106,17 +97,14 @@ const ProfilePage = () => {
 
   // Formatted calculations
   const formattedZlagBalance = useMemo(() => {
-    if (
-      typeof zlagBalanceData === "bigint" &&
-      typeof zlagDecimals === "number"
-    ) {
-      return formatUnits(zlagBalanceData, zlagDecimals);
+    if (zlagBalance && zlagDecimals) {
+      return formatUnits(zlagBalance, zlagDecimals);
     }
     return "0";
-  }, [zlagBalanceData, zlagDecimals]);
+  }, [zlagBalance, zlagDecimals]);
 
   const formattedTotalSupply = useMemo(() => {
-    if (typeof totalSupply === "bigint" && typeof zlagDecimals === "number") {
+    if (totalSupply && zlagDecimals) {
       return formatUnits(totalSupply, zlagDecimals);
     }
     return "0";
@@ -132,12 +120,126 @@ const ProfilePage = () => {
     return "0";
   }, [formattedZlagBalance, formattedTotalSupply]);
 
-  const totalPortfolioValue = useMemo(() => {
-    const nativeBalance = balanceData ? parseFloat(balanceData.formatted) : 0;
-    const zlagBalance = parseFloat(formattedZlagBalance);
-    // Mock price calculation - in real app, you'd fetch token prices
-    return nativeBalance * 1800 + zlagBalance * 0.1; // Mock prices: ETH=$1800, ZLAG=$0.1
-  }, [balanceData, formattedZlagBalance]);
+  // Data fetching effect - similar to MarketplacePage pattern
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!isConnected || !address) {
+        setUserProfile(null);
+        setOwnedAgents([]);
+        setCreatedAgents([]);
+        setUserState({
+          isCheckingUser: false,
+          isCreatingUser: false,
+          userExists: false,
+          userChecked: false,
+        });
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+        setUserState(prev => ({ ...prev, isCheckingUser: true }));
+
+        // Parallel fetch of user data
+        const [userResponse, ownedResponse, createdResponse] = await Promise.all([
+          fetch(`https://zlag-ownable-service.vercel.app/api/users/${address}`),
+          fetch(`https://zlag-ownable-service.vercel.app/api/users/${address}/owned-agents`),
+          fetch(`https://zlag-ownable-service.vercel.app/api/users/${address}/created-agents`)
+        ]);
+
+        // Handle user profile
+        if (userResponse.ok) {
+          const userData = await userResponse.json();
+          if (userData.success && userData.user) {
+            setUserProfile(userData.user);
+            setUserState({
+              isCheckingUser: false,
+              isCreatingUser: false,
+              userExists: true,
+              userChecked: true,
+            });
+          } else {
+            // User doesn't exist, create new user
+            await createNewUser();
+          }
+        } else if (userResponse.status === 404) {
+          // User doesn't exist, create new user
+          await createNewUser();
+        } else {
+          throw new Error('Failed to fetch user profile');
+        }
+
+        // Handle owned agents
+        if (ownedResponse.ok) {
+          const ownedData = await ownedResponse.json();
+          setOwnedAgents(ownedData.success ? ownedData.agents : []);
+        } else {
+          setOwnedAgents([]);
+        }
+
+        // Handle created agents
+        if (createdResponse.ok) {
+          const createdData = await createdResponse.json();
+          setCreatedAgents(createdData.success ? createdData.agents : []);
+        } else {
+          setCreatedAgents([]);
+        }
+
+      } catch (err) {
+        console.error('Error fetching user data:', err);
+        setError('Failed to load profile data');
+        setUserState(prev => ({ ...prev, isCheckingUser: false }));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [address, isConnected]);
+
+  // Create new user function
+  const createNewUser = async () => {
+    if (!address) return;
+
+    try {
+      setUserState(prev => ({ ...prev, isCheckingUser: false, isCreatingUser: true }));
+
+      const response = await fetch('https://zlag-ownable-service.vercel.app/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          walletAddress: address,
+          username: `User_${address.slice(2, 8)}`,
+        })
+      });
+
+      if (response.ok) {
+        const userData = await response.json();
+        if (userData.success) {
+          setUserProfile(userData.user);
+          setUserState({
+            isCheckingUser: false,
+            isCreatingUser: false,
+            userExists: true,
+            userChecked: true,
+          });
+        } else {
+          throw new Error('Failed to create user');
+        }
+      } else {
+        throw new Error('Failed to create user');
+      }
+    } catch (err) {
+      console.error('Error creating user:', err);
+      setUserState({
+        isCheckingUser: false,
+        isCreatingUser: false,
+        userExists: false,
+        userChecked: true,
+      });
+    }
+  };
 
   // Helper functions
   const copyAddress = useCallback(async () => {
@@ -149,19 +251,20 @@ const ProfilePage = () => {
   }, [address]);
 
   const handleConnect = useCallback(() => {
-    // Mock connect function
-    console.log("Connect wallet");
-  }, []);
+    if (connectors[0]) {
+      connect({ connector: connectors[0] });
+    }
+  }, [connect, connectors]);
 
   const handleRefresh = useCallback(async () => {
-    // Mock refresh function
-    console.log("Refreshing data...");
-  }, []);
-
-  const handleDisconnect = useCallback(() => {
-    // Mock disconnect function
-    console.log("Disconnect wallet");
-  }, []);
+    if (refetchZlagBalance) refetchZlagBalance();
+    // Re-fetch user data
+    if (address && isConnected) {
+      setLoading(true);
+      // Trigger the useEffect by updating a state
+      setTimeout(() => setLoading(false), 1000);
+    }
+  }, [refetchZlagBalance, address, isConnected]);
 
   const formatAddress = useCallback(
     (addr) => {
@@ -177,7 +280,7 @@ const ProfilePage = () => {
   }, [address]);
 
   // Loading state
-  if (isConnecting) {
+  if (isPending) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
@@ -215,11 +318,48 @@ const ProfilePage = () => {
     );
   }
 
+  // Main loading state when connected
+  if (loading && isConnected) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="relative mb-8">
+            <div className="w-24 h-24 border-4 border-transparent border-t-purple-400 border-r-indigo-400 rounded-full animate-spin"></div>
+            <div className="absolute inset-2 border-3 border-transparent border-b-purple-500 border-l-indigo-500 rounded-full animate-spin" style={{animationDirection: 'reverse', animationDuration: '1.5s'}}></div>
+          </div>
+          <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-400 via-indigo-400 to-purple-500 bg-clip-text text-transparent mb-3">
+            Loading Profile
+          </h3>
+          <p className="text-gray-400 animate-pulse text-lg">
+            {userState.isCreatingUser ? "Setting up your profile..." : "Loading your data..."}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-black">
+      {/* Enhanced background pattern */}
+      <div className="fixed inset-0 opacity-[0.02]" style={{
+        backgroundImage: `
+          radial-gradient(circle at 25% 25%, rgba(147,51,234,0.1) 0%, transparent 50%),
+          radial-gradient(circle at 75% 75%, rgba(99,102,241,0.1) 0%, transparent 50%),
+          linear-gradient(rgba(147,51,234,0.05) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(147,51,234,0.05) 1px, transparent 1px)
+        `,
+        backgroundSize: '800px 800px, 800px 800px, 40px 40px, 40px 40px'
+      }}></div>
+
       {/* Hero Section with Profile Header */}
       <div className="relative bg-gradient-to-br from-purple-900/20 to-black border-b border-purple-500/20">
         <div className="max-w-7xl mx-auto px-6 py-8">
+          {error && (
+            <div className="bg-red-500/20 backdrop-blur-sm border border-red-500/40 rounded-2xl p-4 mb-6">
+              <p className="text-red-300 text-center">{error}</p>
+            </div>
+          )}
+
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
             {/* Profile Info */}
             <div className="flex items-center gap-6">
@@ -248,7 +388,9 @@ const ProfilePage = () => {
               {/* User Details */}
               <div>
                 <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-3xl font-bold text-white">My Wallet</h1>
+                  <h1 className="text-3xl font-bold text-white">
+                    {userProfile?.username || 'My Wallet'}
+                  </h1>
                   <button
                     onClick={() => setShowPrivateData(!showPrivateData)}
                     className="p-2 text-gray-400 hover:text-purple-400 transition-colors"
@@ -336,7 +478,7 @@ const ProfilePage = () => {
                 <ExternalLink className="h-5 w-5" />
               </button>
               <button
-                onClick={handleDisconnect}
+                onClick={() => disconnect()}
                 className="px-4 py-3 bg-red-600/20 hover:bg-red-600/30 text-red-300 hover:text-red-200 rounded-xl transition-all border border-red-500/30 text-sm font-medium"
               >
                 Disconnect
@@ -347,89 +489,56 @@ const ProfilePage = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Portfolio Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {/* Total Portfolio Value */}
-          <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 border border-purple-500/30 rounded-2xl p-6 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full -translate-y-16 translate-x-16"></div>
-            <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-purple-500/20 rounded-lg">
-                  <BarChart3 className="h-6 w-6 text-purple-400" />
-                </div>
-                <h3 className="text-lg font-semibold text-white">
-                  Portfolio Value
-                </h3>
-              </div>
-              <div className="text-3xl font-bold text-white mb-2">
-                $
-                {totalPortfolioValue.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </div>
-              <div className="text-sm text-purple-300">Estimated USD Value</div>
-            </div>
-          </div>
-
-          {/* Native Token Balance */}
-          <div className="bg-gradient-to-br from-blue-900/30 to-blue-800/20 border border-blue-500/30 rounded-2xl p-6 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full -translate-y-16 translate-x-16"></div>
-            <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-blue-500/20 rounded-lg">
-                  <Coins className="h-6 w-6 text-blue-400" />
-                </div>
-                <h3 className="text-lg font-semibold text-white">
-                  Native Balance
-                </h3>
-                {balanceLoading && (
-                  <div className="animate-spin h-4 w-4 border-2 border-blue-400 border-t-transparent rounded-full"></div>
-                )}
-              </div>
-              <div className="text-3xl font-bold text-white mb-2">
-                {balanceData
-                  ? parseFloat(balanceData.formatted).toFixed(6)
-                  : "0.000000"}
-              </div>
-              <div className="text-sm text-blue-300">
-                {balanceData?.symbol || "ETH"}
-              </div>
-            </div>
-          </div>
-
-          {/* ZLAG Token Balance */}
-          <div className="bg-gradient-to-br from-emerald-900/30 to-emerald-800/20 border border-emerald-500/30 rounded-2xl p-6 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full -translate-y-16 translate-x-16"></div>
-            <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-emerald-500/20 rounded-lg">
-                  <Zap className="h-6 w-6 text-emerald-400" />
-                </div>
-                <h3 className="text-lg font-semibold text-white">ZLAG Token</h3>
-                {zlagBalanceLoading && (
-                  <div className="animate-spin h-4 w-4 border-2 border-emerald-400 border-t-transparent rounded-full"></div>
-                )}
-              </div>
-              <div className="text-3xl font-bold text-white mb-2">
-                {parseFloat(formattedZlagBalance).toFixed(6)}
-              </div>
-              <div className="text-sm text-emerald-300">
-                {ownershipPercentage !== "0"
-                  ? `${ownershipPercentage}% ownership`
-                  : "ZLAG"}
-              </div>
-            </div>
-          </div>
+      <div className="relative max-w-7xl  mx-auto px-6 py-8">
+        {/* ZLAG Token Balance - Single Card */}
+        <div className="mb-8 w-full">
+  <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 border border-purple-500/30 rounded-2xl p-8 relative overflow-hidden w-full mx-auto cursor-pointer transition-all duration-500 ease-out hover:shadow-2xl hover:shadow-purple-500/25 hover:border-purple-400/50 hover:scale-[1.02] group">
+    <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full -translate-y-16 translate-x-16 group-hover:bg-purple-500/20 transition-all duration-500"></div>
+    
+    {/* Additional glow effect on hover */}
+    <div className="absolute inset-0 bg-gradient-to-br from-purple-400/0 via-purple-500/0 to-purple-600/0 group-hover:from-purple-400/5 group-hover:via-purple-500/10 group-hover:to-purple-600/5 rounded-2xl transition-all duration-500"></div>
+    
+    <div className="relative z-10 text-center">
+      <div className="flex items-center justify-center gap-3 mb-6">
+        <div className="w-32 h-32 overflow-hidden bg-white rounded-full group-hover:shadow-xl group-hover:shadow-purple-500/30 transition-all duration-500 group-hover:scale-105">
+          <Image className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src={img} alt="not showing" />
         </div>
+        <h3 className="text-2xl font-semibold text-white group-hover:text-purple-100 transition-colors duration-300">ZLAG Balance</h3>
+        {zlagBalanceLoading && (
+          <div className="animate-spin h-5 w-5 border-2 border-purple-400 border-t-transparent rounded-full"></div>
+        )}
+      </div>
+      <div className="text-4xl font-bold text-white mb-4 group-hover:text-purple-100 transition-colors duration-300 group-hover:scale-105 transform">
+        {parseFloat(formattedZlagBalance).toLocaleString(undefined, {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 6,
+        })}
+      </div>
+      <div className="text-lg text-purple-300 mb-2 group-hover:text-purple-200 transition-colors duration-300">
+         ZLAG Tokens
+      </div>
+      {ownershipPercentage !== "0" && (
+        <div className="text-sm text-purple-400 group-hover:text-purple-300 transition-colors duration-300">
+          {ownershipPercentage}% of total supply
+        </div>
+      )}
+    </div>
+    
+    {/* Animated border pulse effect */}
+    <div className="absolute inset-0 rounded-2xl border-2 border-purple-500/0 group-hover:border-purple-400/30 transition-all duration-500"></div>
+    
+    {/* Corner accent glow */}
+    <div className="absolute -top-1 -right-1 w-8 h-8 bg-purple-500/0 group-hover:bg-purple-400/20 rounded-full blur-sm transition-all duration-500"></div>
+    <div className="absolute -bottom-1 -left-1 w-6 h-6 bg-purple-500/0 group-hover:bg-purple-400/15 rounded-full blur-sm transition-all duration-700"></div>
+  </div>
+</div>
+
 
         {/* Tabs Navigation */}
         <div className="flex space-x-1 bg-gray-900/50 p-1 rounded-xl mb-8 border border-gray-700">
           {[
             { id: "overview", label: "Overview", icon: TrendingUp },
-            { id: "tokens", label: "Tokens", icon: Coins },
-            { id: "activity", label: "Activity", icon: Clock },
+            { id: "agents", label: `Agents (${ownedAgents.length + createdAgents.length})`, icon: User },
           ].map((tab) => {
             const Icon = tab.icon;
             return (
@@ -452,72 +561,49 @@ const ProfilePage = () => {
         {/* Tab Content */}
         {activeTab === "overview" && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Balance Details */}
-            <div className="space-y-6">
-              <div className="bg-gray-900/50 border border-purple-500/30 rounded-2xl p-6">
-                <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
-                  <Award className="h-5 w-5 text-purple-400" />
-                  Balance Breakdown
-                </h3>
+            {/* Token Details */}
+            <div className="bg-gray-900/50 border border-purple-500/30 rounded-2xl p-6">
+              <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+                <Award className="h-5 w-5 text-purple-400" />
+                Token Information
+              </h3>
 
-                <div className="space-y-4">
-                  {/* Native Token */}
-                  <div className="flex justify-between items-center p-4 bg-black/30 rounded-xl border border-gray-700">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                        <Coins className="h-5 w-5 text-white" />
-                      </div>
-                      <div>
-                        <div className="font-medium text-white">
-                          {balanceData?.symbol || "ETH"}
-                        </div>
-                        <div className="text-sm text-gray-400">
-                          Native Token
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold text-white">
-                        {balanceData
-                          ? parseFloat(balanceData.formatted).toFixed(6)
-                          : "0.000000"}
-                      </div>
-                      <div className="text-sm text-gray-400">
-                        $
-                        {balanceData
-                          ? (parseFloat(balanceData.formatted) * 1800).toFixed(
-                              2
-                            )
-                          : "0.00"}
-                      </div>
+              <div className="space-y-4">
+                <div className="bg-black/50 p-4 rounded-xl border border-gray-700">
+                  <div className="text-xs text-gray-400 mb-2">Contract Address</div>
+                  <code className="text-sm text-purple-300 font-mono break-all">
+                    {yourTokenAddress}
+                  </code>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-black/50 p-4 rounded-xl border border-gray-700">
+                    <div className="text-xs text-gray-400 mb-2">Decimals</div>
+                    <div className="text-lg font-semibold text-white">
+                      {zlagDecimals?.toString() || "18"}
                     </div>
                   </div>
-
-                  {/* ZLAG Token */}
-                  <div className="flex justify-between items-center p-4 bg-black/30 rounded-xl border border-gray-700">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
-                        <Zap className="h-5 w-5 text-white" />
-                      </div>
-                      <div>
-                        <div className="font-medium text-white">
-                          {zlagSymbol || "ZLAG"}
-                        </div>
-                        <div className="text-sm text-gray-400">
-                          ERC-20 Token
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold text-white">
-                        {parseFloat(formattedZlagBalance).toFixed(6)}
-                      </div>
-                      <div className="text-sm text-gray-400">
-                        ${(parseFloat(formattedZlagBalance) * 0.1).toFixed(2)}
-                      </div>
+                  <div className="bg-black/50 p-4 rounded-xl border border-gray-700">
+                    <div className="text-xs text-gray-400 mb-2">Symbol</div>
+                    <div className="text-lg font-semibold text-white">
+                      {/* @ts-ignore */}
+                      {zlagSymbol || "ZLAG"}
                     </div>
                   </div>
                 </div>
+                <div className="bg-black/50 p-4 rounded-xl border border-gray-700">
+                  <div className="text-xs text-gray-400 mb-2">Total Supply</div>
+                  <div className="text-2xl font-bold text-white">
+                    {parseFloat(formattedTotalSupply).toLocaleString()}
+                  </div>
+                </div>
+                {parseFloat(ownershipPercentage) > 0 && (
+                  <div className="bg-purple-500/10 border border-purple-500/30 p-4 rounded-xl">
+                    <div className="text-xs text-purple-300 mb-2">Your Ownership</div>
+                    <div className="text-xl font-bold text-purple-400">
+                      {ownershipPercentage}%
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -548,13 +634,17 @@ const ProfilePage = () => {
                   </span>
                 </div>
                 <div className="flex justify-between items-center p-4 bg-black/30 rounded-xl">
-                  <span className="text-gray-400">Token Holdings</span>
-                  <span className="text-white font-medium">2 Tokens</span>
+                  <span className="text-gray-400">Owned Agents</span>
+                  <span className="text-white font-medium">{ownedAgents.length}</span>
                 </div>
                 <div className="flex justify-between items-center p-4 bg-black/30 rounded-xl">
-                  <span className="text-gray-400">ZLAG Ownership</span>
-                  <span className="text-purple-300 font-medium">
-                    {ownershipPercentage}%
+                  <span className="text-gray-400">Created Agents</span>
+                  <span className="text-white font-medium">{createdAgents.length}</span>
+                </div>
+                <div className="flex justify-between items-center p-4 bg-black/30 rounded-xl">
+                  <span className="text-gray-400">ZLAG Holdings</span>
+                  <span className="text-emerald-300 font-medium">
+                    {parseFloat(formattedZlagBalance).toLocaleString()}
                   </span>
                 </div>
               </div>
@@ -562,225 +652,99 @@ const ProfilePage = () => {
           </div>
         )}
 
-        {activeTab === "tokens" && (
-          <div className="bg-gray-900/50 border border-purple-500/30 rounded-2xl p-6">
-            <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
-              <Coins className="h-5 w-5 text-purple-400" />
-              Token Details
-            </h3>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Contract Information */}
-              <div className="space-y-4">
-                <h4 className="font-semibold text-white">
-                  ZLAG Contract Information
-                </h4>
-                <div className="space-y-3">
-                  <div className="bg-black/50 p-4 rounded-xl border border-gray-700">
-                    <div className="text-xs text-gray-400 mb-2">
-                      Contract Address
-                    </div>
-                    <code className="text-sm text-purple-300 font-mono break-all">
-                      0xea4808283eFC9140BBea9E5465AEAF102DDA1b85
-                    </code>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-black/50 p-4 rounded-xl border border-gray-700">
-                      <div className="text-xs text-gray-400 mb-2">Decimals</div>
-                      <div className="text-lg font-semibold text-white">
-                        {zlagDecimals?.toString() || "18"}
+        {activeTab === "agents" && (
+          <div className="space-y-8">
+            {/* Owned Agents */}
+            {ownedAgents.length > 0 && (
+              <div className="bg-gray-900/50 border border-purple-500/30 rounded-2xl p-6">
+                <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+                  <User className="h-5 w-5 text-purple-400" />
+                  Owned Agents ({ownedAgents.length})
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {ownedAgents.map((agent) => (
+                    <div key={agent.id} className="bg-black/30 border border-gray-700 rounded-xl p-4 hover:border-purple-500/50 transition-all">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                          <User className="h-5 w-5 text-purple-400" />
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-white">{agent.name}</h4>
+                          <p className="text-xs text-gray-400">Owned Agent</p>
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-300 mb-3">{agent.description}</p>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-purple-300">{agent.price || 'Free'}</span>
+                        <button 
+                          onClick={() => window.location.href = `/agent/${agent.id}`}
+                          className="text-xs bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 px-3 py-1 rounded-lg transition-all"
+                        >
+                          Launch
+                        </button>
                       </div>
                     </div>
-                    <div className="bg-black/50 p-4 rounded-xl border border-gray-700">
-                      <div className="text-xs text-gray-400 mb-2">Symbol</div>
-                      <div className="text-lg font-semibold text-white">
-                        {zlagSymbol || "ZLAG"}
-                      </div>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
+            )}
 
-              {/* Supply Information */}
-              <div className="space-y-4">
-                <h4 className="font-semibold text-white">Supply Information</h4>
-                <div className="space-y-3">
-                  <div className="bg-black/50 p-4 rounded-xl border border-gray-700">
-                    <div className="text-xs text-gray-400 mb-2">
-                      Total Supply
-                    </div>
-                    <div className="text-2xl font-bold text-white">
-                      {parseFloat(formattedTotalSupply).toLocaleString()}
-                    </div>
-                  </div>
-                  <div className="bg-black/50 p-4 rounded-xl border border-gray-700">
-                    <div className="text-xs text-gray-400 mb-2">
-                      Your Holdings
-                    </div>
-                    <div className="text-2xl font-bold text-purple-400">
-                      {parseFloat(formattedZlagBalance).toLocaleString()}
-                    </div>
-                  </div>
-                  {parseFloat(ownershipPercentage) > 0 && (
-                    <div className="bg-purple-500/10 border border-purple-500/30 p-4 rounded-xl">
-                      <div className="text-xs text-purple-300 mb-2">
-                        Ownership Percentage
+            {/* Created Agents */}
+            {createdAgents.length > 0 && (
+              <div className="bg-gray-900/50 border border-emerald-500/30 rounded-2xl p-6">
+                <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+                  <Settings className="h-5 w-5 text-emerald-400" />
+                  Created Agents ({createdAgents.length})
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {createdAgents.map((agent) => (
+                    <div key={agent.id} className="bg-black/30 border border-gray-700 rounded-xl p-4 hover:border-emerald-500/50 transition-all">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                          <Settings className="h-5 w-5 text-emerald-400" />
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-white">{agent.name}</h4>
+                          <p className="text-xs text-gray-400">Your Creation</p>
+                        </div>
                       </div>
-                      <div className="text-xl font-bold text-purple-400">
-                        {ownershipPercentage}%
+                      <p className="text-sm text-gray-300 mb-3">{agent.description}</p>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-emerald-300">{agent.price || 'Free'}</span>
+                        <button 
+                          onClick={() => window.location.href = `/agent/${agent.id}`}
+                          className="text-xs bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 px-3 py-1 rounded-lg transition-all"
+                        >
+                          Manage
+                        </button>
                       </div>
                     </div>
-                  )}
+                  ))}
                 </div>
               </div>
-            </div>
-          </div>
-        )}
+            )}
 
-        {activeTab === "activity" && (
-          <div className="bg-gray-900/50 border border-purple-500/30 rounded-2xl p-6">
-            <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
-              <Clock className="h-5 w-5 text-purple-400" />
-              Recent Activity
-            </h3>
-
-            {activityData.length > 0 ? (
-              <div className="space-y-4">
-                {activityData.map((activity) => (
-                  <div
-                    key={activity.id}
-                    className="flex items-center justify-between p-4 bg-black/30 rounded-xl border border-gray-700 hover:border-purple-500/50 transition-all"
+            {ownedAgents.length === 0 && createdAgents.length === 0 && (
+              <div className="text-center py-20">
+                <div className="bg-gradient-to-br from-gray-900/40 via-gray-900/30 to-black/40 backdrop-blur-xl border border-purple-800/30 rounded-3xl p-12 mx-auto max-w-lg">
+                  <div className="text-purple-500 mb-6">
+                    <User size={64} className="mx-auto" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-3">No Agents Yet</h3>
+                  <p className="text-gray-400 leading-relaxed mb-6">
+                    You haven't owned or created any agents yet. Visit the marketplace to get started!
+                  </p>
+                  <button
+                    onClick={() => window.location.href = '/marketplace'}
+                    className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-8 py-3 rounded-2xl font-semibold hover:from-purple-400 hover:to-indigo-400 hover:shadow-xl hover:shadow-purple-500/30 transition-all duration-300 transform hover:scale-105"
                   >
-                    <div className="flex items-center gap-4">
-                      <div
-                        className={`p-2 rounded-lg ${
-                          activity.type === "received"
-                            ? "bg-green-500/20"
-                            : "bg-red-500/20"
-                        }`}
-                      >
-                        {activity.type === "received" ? (
-                          <ArrowDownLeft
-                            className={`h-5 w-5 ${
-                              activity.type === "received"
-                                ? "text-green-400"
-                                : "text-red-400"
-                            }`}
-                          />
-                        ) : (
-                          <ArrowUpRight
-                            className={`h-5 w-5 ${
-                              activity.type === "received"
-                                ? "text-green-400"
-                                : "text-red-400"
-                            }`}
-                          />
-                        )}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-white">
-                            {activity.type === "received" ? "Received" : "Sent"}{" "}
-                            {activity.amount} {activity.token}
-                          </span>
-                        </div>
-                        <div className="text-sm text-gray-400">
-                          {activity.type === "received" ? "From" : "To"}:{" "}
-                          {activity.type === "received"
-                            ? activity.from
-                            : activity.to}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm text-gray-400 mb-1">
-                        {activity.timestamp}
-                      </div>
-                      <button
-                        onClick={() =>
-                          window.open(
-                            `https://etherscan.io/tx/${activity.txHash}`,
-                            "_blank"
-                          )
-                        }
-                        className="text-xs text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-1"
-                      >
-                        View Tx
-                        <ExternalLink className="h-3 w-3" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-
-                <div className="text-center pt-4">
-                  <button className="text-purple-400 hover:text-purple-300 transition-colors text-sm font-medium">
-                    View All Transactions
+                    Explore Marketplace
                   </button>
                 </div>
               </div>
-            ) : (
-              <div className="text-center py-16">
-                <Activity className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-                <h4 className="text-xl font-semibold text-gray-400 mb-2">
-                  No Recent Activity
-                </h4>
-                <p className="text-gray-500 mb-6">
-                  Your transaction history will appear here once you start
-                  interacting with the blockchain.
-                </p>
-                <button
-                  onClick={handleRefresh}
-                  className="bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 px-6 py-3 rounded-xl transition-all border border-purple-500/30 font-medium"
-                >
-                  <RefreshCw className="h-4 w-4 inline mr-2" />
-                  Refresh Activity
-                </button>
-              </div>
             )}
-          </div>
-        )}
-
-        {/* Additional Stats Section - Only show on overview tab */}
-        {activeTab === "overview" && (
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Quick Stats Cards */}
-            <div className="bg-gray-900/50 border border-gray-700 rounded-xl p-4">
-              <div className="flex items-center gap-3 mb-2">
-                <Shield className="h-5 w-5 text-blue-400" />
-                <span className="text-sm text-gray-400">Security Score</span>
-              </div>
-              <div className="text-2xl font-bold text-white">95/100</div>
-              <div className="text-xs text-green-400">Excellent</div>
-            </div>
-
-            <div className="bg-gray-900/50 border border-gray-700 rounded-xl p-4">
-              <div className="flex items-center gap-3 mb-2">
-                <Calendar className="h-5 w-5 text-purple-400" />
-                <span className="text-sm text-gray-400">Account Age</span>
-              </div>
-              <div className="text-2xl font-bold text-white">2.3</div>
-              <div className="text-xs text-gray-400">Years</div>
-            </div>
-
-            <div className="bg-gray-900/50 border border-gray-700 rounded-xl p-4">
-              <div className="flex items-center gap-3 mb-2">
-                <TrendingUp className="h-5 w-5 text-green-400" />
-                <span className="text-sm text-gray-400">
-                  Total Transactions
-                </span>
-              </div>
-              <div className="text-2xl font-bold text-white">1,247</div>
-              <div className="text-xs text-green-400">+12 this month</div>
-            </div>
-
-            <div className="bg-gray-900/50 border border-gray-700 rounded-xl p-4">
-              <div className="flex items-center gap-3 mb-2">
-                <Zap className="h-5 w-5 text-yellow-400" />
-                <span className="text-sm text-gray-400">Gas Spent</span>
-              </div>
-              <div className="text-2xl font-bold text-white">0.045</div>
-              <div className="text-xs text-gray-400">ETH Total</div>
-            </div>
           </div>
         )}
 
@@ -810,13 +774,6 @@ const ProfilePage = () => {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <button
-                onClick={() => window.open("https://ethereum.org/", "_blank")}
-                className="text-gray-400 hover:text-purple-400 transition-colors p-2"
-                title="Learn more about Ethereum"
-              >
-                <ExternalLink className="h-4 w-4" />
-              </button>
               <div className="text-xs text-gray-500">
                 Last updated: {new Date().toLocaleTimeString()}
               </div>
