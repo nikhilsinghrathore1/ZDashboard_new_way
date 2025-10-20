@@ -133,7 +133,7 @@ const MarketplacePage = () => {
   });
 
   // --- This is the NEW function that starts the blockchain payment ---
-  const handleBlockchainPayment = async () => {
+  const handleBlockchainPayment = async () => { 
     if (!selectedAgent || !userAddress) {
       setPurchaseError("No agent selected or wallet not connected.");
       return;
@@ -160,7 +160,10 @@ const MarketplacePage = () => {
       setPurchaseError("Failed to initiate payment. Please check your wallet and try again.");
     }
   };
-  
+  // lana codes done, yc docs creator done, telegram bot done, trading bot done, gitDocify has to fixed ig it's not working but it's no big deal can be fixed easily , voice agent is also done
+  // agent creation thingy is also done, the video presentation thingy is also done .....
+  // i am learning about go lang and for starters will create a web server from scratch using go lang which shall be capable of accepting get post and put route or are there these routes or they just naming conventions hmm 
+  // yeah these diwali breaks shall be enough for it then we'll dive into webrtc protocols and how they work the future looks real time so these field must be having a lot of opportuniteis and ye yaml file kya hota hai kaun banata hai ye sari files hmmm interesting but theek hai bhai ke pass bhi khali 24hr hai din mai pura takkar dunga iss cse ko aur jeetunga bhi 
   // --- This is your OLD function, now repurposed to only handle the backend update ---
   const handleUpdateBackendAfterPurchase = async () => {
     console.log("2️⃣ Updating backend after successful payment...");
@@ -169,7 +172,9 @@ const MarketplacePage = () => {
         agentId: selectedAgent.agentId,
         buyerWalletAddress: userAddress,
       };
+      // mostly answerd all of your friend's question now answer mine 
 
+      
       console.log("this is the updated payload : " ,payload)
 
       
