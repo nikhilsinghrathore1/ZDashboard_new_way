@@ -169,8 +169,9 @@ const MarketplacePage = () => {
     console.log("2️⃣ Updating backend after successful payment...");
     try {
       const payload = {
-        agentId: selectedAgent.agentId,
+        agentId: selectedAgent.id,
         buyerWalletAddress: userAddress,
+        onchainAgentid : selectedAgent.agentId
       };
       // mostly answerd all of your friend's question now answer mine 
 

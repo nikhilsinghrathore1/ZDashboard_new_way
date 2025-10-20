@@ -186,6 +186,8 @@ const AgentCreationPage = () => {
         err.message ||
           "Payment succeeded, but failed to save agent data. Please contact support."
       );
+    }
+    finally {
       setDeploymentStatus("idle"); // CHANGED from setIsLoading(false)
     }
   };
@@ -353,7 +355,7 @@ const AgentCreationPage = () => {
       saving: "Step 3/3: Finalizing and saving agent...",
     };
 
-    const blockExplorerUrl = "https://sepolia.etherscan.io/tx/"; // Change if you use a different network
+    const blockExplorerUrl = "https://sepolia.basescan.org/tx/"; // Change if you use a different network
 
     return (
       <div className="min-h-screen bg-black flex items-center justify-center overflow-hidden">
