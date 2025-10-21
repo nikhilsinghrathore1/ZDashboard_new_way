@@ -8,6 +8,9 @@ import { ethers } from 'ethers'
 import AgentPlatformABI from '../contracts/AgentPlatform.json';
 import ERC20ABI from '../contracts/erc20_abi.json';
 import { agentPlatformAddress, yourTokenAddress } from '../contracts/addresses';
+import { payloadSearcher } from 'recharts/types/chart/SunburstChart'
+
+// what all things are needed to be fixed, have to check whether the token transfer thingy is working or not then i we have to work on the ai agents this time let's make the agents work forever then i don't know if there is anything else that is needed to be done but still what else is needed to be done marketing is the main thing yes have to shoot some good videos then 
 
 // Static agents that always appear
 const STATIC_AGENTS = [
@@ -29,7 +32,7 @@ const STATIC_AGENTS = [
     owned: false,
     createdByUser: false,
     liked: true,
-    redirectUrl: 'https://t.me/ApeDigest_Bot', // Replace with actual Telegram bot link
+    redirectUrl: 'https://t.me/ApeDigest_Bot', 
     isFree: true,
     isStatic: true
   },
@@ -169,9 +172,9 @@ const MarketplacePage = () => {
     console.log("2️⃣ Updating backend after successful payment...");
     try {
       const payload = {
-        agentId: selectedAgent.id,
+        agentId: selectedAgent.agentId,
         buyerWalletAddress: userAddress,
-        onchainAgentid : selectedAgent.agentId
+        // onchainAgentid : selectedAgent.agentId
       };
       // mostly answerd all of your friend's question now answer mine 
 
@@ -317,10 +320,10 @@ const MarketplacePage = () => {
         // Process all agents and filter out the ones already owned
         if (generalResponse.ok) {
           const generalResult = await generalResponse.json();
-          const ownedAgentIds = new Set(ownedAgents.map(a => a.id));
+          const ownedAgentIds = new Set(ownedAgents.map(a => a.agentId));
           if (generalResult.success) {
             const allAgentsData = generalResult.agents
-              .filter(agent => !ownedAgentIds.has(agent.id))
+            .filter(agent => !ownedAgentIds.has(agent.agentId))
               .map(agent => {
                 const isCreated = agent.creatorWalletAddress === userAddress;
                 return transformApiAgent(agent, false, isCreated);
